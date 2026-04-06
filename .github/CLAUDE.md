@@ -18,11 +18,10 @@ Always verify the SHA matches the expected release tag before updating.
 | Action | SHA | Version |
 |--------|-----|---------|
 | actions/checkout | `de0fac2e4500dabe0009e67214ff5f5447ce83dd` | v6.0.2 |
-| oven-sh/setup-bun | `ecf28ddc73e819eb6fa29df6b34ef8921c743461` | v2.1.3 |
+| oven-sh/setup-bun | `0c5077e51419868618aeaa5fe8019c62421857d6` | v2.2.0 |
 | actions/cache | `cdf6c1fa76f9f475f3d7449005a359c84ca0f306` | v5.0.3 |
 | actions/upload-artifact | `bbbca2ddaa5d8feaa63e36b76fdaad77386f024f` | v7.0.0 |
 | actions/download-artifact | `3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c` | v8.0.1 |
-| softprops/action-gh-release | `a06a81a03ee405af7f2048a818ed3f03bbf83c7b` | v2.5.0 |
 
 ## CI Workflow (`workflows/ci.yml`)
 
