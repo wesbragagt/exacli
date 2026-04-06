@@ -2,7 +2,10 @@
  * Markdown output formatter
  */
 
-export function formatSearchResults(response: unknown, options: { json?: boolean } = {}) {
+export function formatSearchResults(
+  response: unknown,
+  options: { json?: boolean } = {}
+) {
   if (options.json) {
     return JSON.stringify(response, null, 2);
   }
@@ -24,26 +27,26 @@ export function formatSearchResults(response: unknown, options: { json?: boolean
     }>;
   };
 
-  let output = "# Search Results\n\n";
+  let output = '# Search Results\n\n';
 
   if (data.requestId) {
     output += `Request ID: ${data.requestId}\n\n`;
   }
 
   if (data.costDollars) {
-    output += `Cost: $${data.costDollars.total?.toFixed(4) || "0.0000"}\n\n`;
+    output += `Cost: $${data.costDollars.total?.toFixed(4) || '0.0000'}\n\n`;
   }
 
   if (!data.results || data.results.length === 0) {
-    output += "No results found.\n";
+    output += 'No results found.\n';
     return output;
   }
 
   for (let i = 0; i < data.results.length; i++) {
     const result = data.results[i];
     if (!result) continue;
-    
-    output += `## ${i + 1}. ${result.title || "Untitled"}\n\n`;
+
+    output += `## ${i + 1}. ${result.title || 'Untitled'}\n\n`;
     output += `- **URL:** ${result.url}\n`;
     output += `- **ID:** ${result.id}\n`;
 
@@ -59,32 +62,35 @@ export function formatSearchResults(response: unknown, options: { json?: boolean
       output += `- **Relevance Score:** ${result.score.toFixed(3)}\n`;
     }
 
-    output += "\n";
+    output += '\n';
 
     if (result.text) {
       output += `### Content\n\n${result.text}\n\n`;
     }
 
     if (result.highlights && result.highlights.length > 0) {
-      output += "### Highlights\n\n";
+      output += '### Highlights\n\n';
       for (let j = 0; j < result.highlights.length; j++) {
         const score = result.highlightScores?.[j];
-        output += `- ${result.highlights[j]}${score ? ` (score: ${score.toFixed(2)})` : ""}\n`;
+        output += `- ${result.highlights[j]}${score ? ` (score: ${score.toFixed(2)})` : ''}\n`;
       }
-      output += "\n";
+      output += '\n';
     }
 
     if (result.summary) {
       output += `### Summary\n\n${result.summary}\n\n`;
     }
 
-    output += "---\n\n";
+    output += '---\n\n';
   }
 
   return output;
 }
 
-export function formatAnswerResponse(response: unknown, options: { json?: boolean } = {}) {
+export function formatAnswerResponse(
+  response: unknown,
+  options: { json?: boolean } = {}
+) {
   if (options.json) {
     return JSON.stringify(response, null, 2);
   }
@@ -99,40 +105,43 @@ export function formatAnswerResponse(response: unknown, options: { json?: boolea
     }>;
   };
 
-  let output = "# Answer\n\n";
+  let output = '# Answer\n\n';
 
   if (data.requestId) {
     output += `Request ID: ${data.requestId}\n\n`;
   }
 
   if (data.costDollars) {
-    output += `Cost: $${data.costDollars.total?.toFixed(4) || "0.0000"}\n\n`;
+    output += `Cost: $${data.costDollars.total?.toFixed(4) || '0.0000'}\n\n`;
   }
 
-  output += "## Response\n\n";
+  output += '## Response\n\n';
 
-  if (typeof data.answer === "string") {
+  if (typeof data.answer === 'string') {
     output += `${data.answer}\n\n`;
   } else {
-    output += "```json\n";
+    output += '```json\n';
     output += JSON.stringify(data.answer, null, 2);
-    output += "\n```\n\n";
+    output += '\n```\n\n';
   }
 
   if (data.citations && data.citations.length > 0) {
-    output += "## Citations\n\n";
+    output += '## Citations\n\n';
     for (let i = 0; i < data.citations.length; i++) {
       const citation = data.citations[i];
       if (!citation) continue;
-      output += `${i + 1}. [${citation.title || "Untitled"}](${citation.url})\n`;
+      output += `${i + 1}. [${citation.title || 'Untitled'}](${citation.url})\n`;
     }
-    output += "\n";
+    output += '\n';
   }
 
   return output;
 }
 
-export function formatResearchTask(task: unknown, options: { json?: boolean } = {}) {
+export function formatResearchTask(
+  task: unknown,
+  options: { json?: boolean } = {}
+) {
   if (options.json) {
     return JSON.stringify(task, null, 2);
   }
@@ -152,7 +161,7 @@ export function formatResearchTask(task: unknown, options: { json?: boolean } = 
     }>;
   };
 
-  let output = "# Research Task\n\n";
+  let output = '# Research Task\n\n';
   output += `- **ID:** ${data.researchId}\n`;
   output += `- **Status:** ${data.status}\n`;
 
@@ -160,14 +169,14 @@ export function formatResearchTask(task: unknown, options: { json?: boolean } = 
     output += `- **Instructions:** ${data.instructions}\n`;
   }
 
-  output += "\n";
+  output += '\n';
 
   if (data.output) {
-    output += "## Output\n\n";
+    output += '## Output\n\n';
     if (data.output.parsed) {
-      output += "```json\n";
+      output += '```json\n';
       output += JSON.stringify(data.output.parsed, null, 2);
-      output += "\n```\n\n";
+      output += '\n```\n\n';
     }
     if (data.output.content) {
       output += `${data.output.content}\n\n`;
@@ -175,12 +184,12 @@ export function formatResearchTask(task: unknown, options: { json?: boolean } = 
   }
 
   if (data.events && data.events.length > 0) {
-    output += "## Events\n\n";
+    output += '## Events\n\n';
     for (const event of data.events) {
       const timestamp = new Date(event.createdAt).toISOString();
-      output += `- [${timestamp}] ${event.eventType}${event.message ? `: ${event.message}` : ""}\n`;
+      output += `- [${timestamp}] ${event.eventType}${event.message ? `: ${event.message}` : ''}\n`;
     }
-    output += "\n";
+    output += '\n';
   }
 
   return output;

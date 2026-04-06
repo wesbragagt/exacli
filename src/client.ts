@@ -2,9 +2,9 @@
  * Exa SDK Client wrapper
  */
 
-import Exa from "exa-js";
+import { Exa } from 'exa-js';
 
-export type ExaClient = Exa;
+export type ExaClient = InstanceType<typeof Exa>;
 export type {
   BaseSearchOptions,
   RegularSearchOptions,
@@ -15,7 +15,7 @@ export type {
   AnswerResponse,
   Research,
   ResearchCreateRequest,
-} from "exa-js";
+} from 'exa-js';
 
 export function createClient(apiKey: string): ExaClient {
   return new Exa(apiKey);

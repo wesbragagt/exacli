@@ -1,22 +1,25 @@
-# @ai-bubble/exa-cli
+# Exacli
 
-> A powerful CLI tool for Exa AI search API. Query the web with semantic search, extract content from URLs, get AI-powered answers and citations, and conduct automated research - all from your terminal.
+> A CLI tool for the Exa AI search API. Search the web semantically, extract content from URLs, get AI-powered answers with citations, and conduct automated research from your terminal.
 
 ## Overview
 
-@ai-bubble/exa-cli is a zero-dependency command-line interface for the Exa AI search API. It provides intuitive commands for semantic web search, content extraction, AI-powered Q&A, and automated research tasks. Built with Bun and TypeScript, it outputs beautifully formatted markdown by default with JSON support for scripting.
+Exacli is a command-line interface for the Exa AI search API. It provides commands for semantic web search, content extraction, AI-powered Q&A, and automated research tasks. Built with Bun and TypeScript, it outputs formatted markdown by default with JSON support for scripting.
 
 ## Installation
 
 ```bash
-# Install globally via npm
-npm install -g @ai-bubble/exa-cli
+# Download binary from GitHub Releases
+curl -L https://github.com/SoftwareStartups/exacli/releases/latest/download/exacli-darwin-arm64 -o exacli
+chmod +x exacli
+sudo mv exacli /usr/local/bin/
 
-# Or use with npx (no installation required)
-npx @ai-bubble/exa-cli search "AI startups"
-
-# Or install with Bun
-bun install @ai-bubble/exa-cli
+# Or build from source
+git clone https://github.com/SoftwareStartups/exacli.git
+cd exacli
+bun install
+task build
+bun link
 ```
 
 ## Configuration
@@ -35,19 +38,19 @@ Get your API key at: https://dashboard.exa.ai/api-keys
 
 ```bash
 # Search the web
-exa search "latest AI developments"
+exacli search "latest AI developments"
 
 # Search with content extraction
-exa search "machine learning papers" --text --num-results 5
+exacli search "machine learning papers" --text --num-results 5
 
 # Get AI-powered answers
-exa answer "What is quantum computing?"
+exacli answer "What is quantum computing?"
 
 # Find similar pages
-exa similar "https://example.com/article"
+exacli similar "https://example.com/article"
 
 # Conduct automated research
-exa research "Latest SpaceX valuation" --poll
+exacli research "Latest SpaceX valuation" --poll
 ```
 
 ## Core Commands
@@ -56,7 +59,7 @@ exa research "Latest SpaceX valuation" --poll
 Search the web using semantic search.
 
 ```bash
-exa search "query" [options]
+exacli search "query" [options]
 ```
 
 **Options:**
@@ -78,7 +81,7 @@ exa search "query" [options]
 Retrieve contents from specific URLs.
 
 ```bash
-exa contents <url...> [options]
+exacli contents <url...> [options]
 ```
 
 **Options:**
@@ -91,7 +94,7 @@ exa contents <url...> [options]
 Find pages similar to a given URL.
 
 ```bash
-exa similar <url> [options]
+exacli similar <url> [options]
 ```
 
 **Options:**
@@ -104,7 +107,7 @@ exa similar <url> [options]
 Get AI-powered answers with citations.
 
 ```bash
-exa answer "query" [options]
+exacli answer "query" [options]
 ```
 
 **Options:**
@@ -117,7 +120,7 @@ exa answer "query" [options]
 Create automated research tasks.
 
 ```bash
-exa research "instructions" [options]
+exacli research "instructions" [options]
 ```
 
 **Options:**
@@ -130,14 +133,14 @@ exa research "instructions" [options]
 Check research task status.
 
 ```bash
-exa research-status <task-id>
+exacli research-status <task-id>
 ```
 
 ### Research List
 List all research tasks.
 
 ```bash
-exa research-list [options]
+exacli research-list [options]
 ```
 
 **Options:**
@@ -154,80 +157,53 @@ exa research-list [options]
 
 ### Semantic Search
 ```bash
-# Basic search
-exa search "hottest AI startups 2024"
-
-# Deep search with content
-exa search "transformer architecture" --type deep --text --highlights
-
-# Filter by category and date
-exa search "AI acquisitions" --category news --start-date 2024-01-01
-
-# Domain filtering
-exa search "research" --include-domains "arxiv.org,openai.com"
+exacli search "hottest AI startups 2024"
+exacli search "transformer architecture" --type deep --text --highlights
+exacli search "AI acquisitions" --category news --start-date 2024-01-01
+exacli search "research" --include-domains "arxiv.org,openai.com"
 ```
 
 ### Content Extraction
 ```bash
-# Get article text
-exa contents "https://arxiv.org/abs/2304.15004" --text
-
-# Multiple URLs with highlights
-exa contents "https://example.com/1" "https://example.com/2" --highlights --summary
+exacli contents "https://arxiv.org/abs/2304.15004" --text
+exacli contents "https://example.com/1" "https://example.com/2" --highlights --summary
 ```
 
 ### AI Q&A
 ```bash
-# Basic answer
-exa answer "What is neural machine translation?"
-
-# Streaming response
-exa answer "Explain large language models" --stream
-
-# With custom prompt
-exa answer "Explain recursion" --system-prompt "Explain like I'm 5"
+exacli answer "What is neural machine translation?"
+exacli answer "Explain large language models" --stream
+exacli answer "Explain recursion" --system-prompt "Explain like I'm 5"
 ```
 
 ### Research Workflow
 ```bash
-# Create and poll research task
-exa research "SpaceX valuation and funding history" --poll
-
-# Check status later
-exa research-status "task-id"
-
-# List all tasks
-exa research-list --limit 10
+exacli research "SpaceX valuation and funding history" --poll
+exacli research-status "task-id"
+exacli research-list --limit 10
 ```
 
 ## Development
 
 ```bash
-# Install dependencies
-bun install
-
-# Run in development
-bun run src/index.ts search "test"
-
-# Run tests
-bun test
-
-# Build executable
-bun run build
+bun install        # Install dependencies
+task build         # Compile TypeScript
+task test          # Run tests
+task ci            # Full CI pipeline
+task compile       # Build binary
 ```
 
 ## Documentation
 
-- [README](https://github.com/sandiiarov/exa-cli#readme): Full documentation
+- [README](https://github.com/SoftwareStartups/exacli#readme): Full documentation
 - [Exa API Docs](https://exa.ai/docs): Official Exa API documentation
-- [Issues](https://github.com/sandiiarov/exa-cli/issues): Report bugs or request features
+- [Issues](https://github.com/SoftwareStartups/exacli/issues): Report bugs or request features
 
 ## Optional
 
 - [API Reference](https://exa.ai/docs/rest-api): Complete API documentation
 - [TypeScript SDK](https://github.com/exa-labs/exa-js): Official SDK used by this CLI
-- [Changelog](https://github.com/sandiiarov/exa-cli/blob/main/CHANGELOG.md): Version history
 
 ---
 
-Built with Bun and the Exa API. MIT License.
+MIT License. Built with Bun and the Exa API.

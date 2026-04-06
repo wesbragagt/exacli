@@ -1,0 +1,61 @@
+# Exacli
+
+Bun-native TypeScript CLI for Exa AI search API. Semantic search, content extraction, AI answers, and automated research.
+
+## Commands
+
+```bash
+# Setup
+bun install                          # Install dependencies
+task build                           # Compile TypeScript to build/
+task clean                           # Remove build/ and dist/
+
+# Quality
+task lint                            # Lint with Biome
+task format                          # Format with Biome (write)
+task test                            # Run tests (bun test)
+task check                           # Lint + typecheck + tests (parallel)
+
+# Pipelines
+task ci                              # Full CI locally: clean -> install -> format:check -> check -> build
+
+# Release
+task compile                         # Build standalone binary for current platform
+task compile:all                     # Build binaries for all 4 platforms
+```
+
+## Architecture
+
+```text
+src/
+├── index.ts              # CLI entry point (arg parsing, help, command dispatch)
+├── client.ts             # Exa SDK wrapper
+├── commands/
+│   ├── search.ts         # Web search
+│   ├── contents.ts       # URL content extraction
+│   ├── similar.ts        # Similar page discovery
+│   ├── answer.ts         # AI-powered answers
+│   └── research.ts       # Research tasks (create, status, list)
+├── formatters/
+│   └── markdown.ts       # Markdown + JSON output formatting
+└── utils/
+    └── validation.ts     # Input validation (numbers, URLs, string lists)
+tests/
+├── validation.test.ts
+├── formatters.test.ts
+├── commands.test.ts
+└── e2e.test.ts
+```
+
+## Code Style
+
+- TypeScript strict mode, ES2022 target, NodeNext modules
+- Biome for linting/formatting (indent 2, single quotes, semicolons, trailing commas es5)
+- Bun runtime
+- Default output is markdown; `--json` flag switches to raw JSON
+
+## Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `EXA_API_KEY` | Exa API key (or use --api-key flag) |

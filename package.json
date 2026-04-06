@@ -1,51 +1,51 @@
 {
-  "name": "@ai-bubble/exa-cli",
-  "version": "0.1.5",
-  "description": "CLI tool for Exa Search API",
-  "module": "src/index.ts",
+  "name": "exacli",
+  "version": "1.0.0",
+  "description": "A CLI tool for Exa AI search API",
   "type": "module",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "bin": {
-    "exa": "src/index.ts"
+    "exacli": "build/index.js"
   },
   "files": [
-    "src",
-    "README.md",
-    "LICENSE"
+    "build",
+    "README.md"
   ],
   "scripts": {
-    "start": "bun run src/index.ts",
-    "build": "bun build ./src/index.ts --compile --outfile exa",
+    "build": "tsc",
+    "start": "bun run build/index.js",
+    "format": "bunx biome format --write .",
+    "format:check": "bunx biome format .",
+    "lint": "bunx biome lint .",
+    "typecheck": "tsc --noEmit -p tsconfig.check.json",
     "test": "bun test",
-    "test:watch": "bun test --watch"
+    "postinstall": "lefthook install"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SoftwareStartups/exacli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SoftwareStartups/exacli/issues"
+  },
+  "homepage": "https://github.com/SoftwareStartups/exacli#readme",
   "keywords": [
     "exa",
     "ai",
     "search",
     "cli",
-    "semantic-search",
-    "neural-search"
+    "semantic-search"
   ],
-  "author": "",
+  "author": "SoftwareStartups",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/sandiiarov/exa-cli.git"
-  },
-  "bugs": {
-    "url": "https://github.com/sandiiarov/exa-cli/issues"
-  },
-  "homepage": "https://github.com/sandiiarov/exa-cli#readme",
-  "engines": {
-    "bun": ">=1.0.0"
-  },
   "dependencies": {
     "exa-js": "2.4.0"
   },
   "devDependencies": {
-    "@types/bun": "1.3.9"
-  },
-  "peerDependencies": {
-    "typescript": "5.9.3"
+    "@biomejs/biome": "^2.4.7",
+    "bun-types": "^1.3.10",
+    "lefthook": "^1.11.0",
+    "typescript": "^5.9.3"
   }
 }
