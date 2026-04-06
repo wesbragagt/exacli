@@ -31,6 +31,7 @@ src/
 ├── index.ts              # CLI entry point (arg parsing, help, command dispatch)
 ├── client.ts             # Exa SDK wrapper
 ├── commands/
+│   ├── types.ts          # Command arg interfaces and shared types
 │   ├── search.ts         # Web search
 │   ├── contents.ts       # URL content extraction
 │   ├── similar.ts        # Similar page discovery
@@ -39,6 +40,7 @@ src/
 ├── formatters/
 │   └── markdown.ts       # Markdown + JSON output formatting
 └── utils/
+    ├── commands.ts       # Shared command helpers (error handling, content options, citations)
     └── validation.ts     # Input validation (numbers, URLs, string lists)
 tests/
 ├── validation.test.ts

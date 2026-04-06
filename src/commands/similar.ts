@@ -1,32 +1,32 @@
 import type { ExaClient } from '../client.js';
 import * as format from '../formatters/markdown.js';
+import type { SimilarCommandArgs } from './types.js';
+import {
+  hasContentOptions,
+  applyContentOptions,
+  runCommand,
+} from '../utils/commands.js';
 import { parseNumber } from '../utils/validation.js';
 
 export async function similar(
   client: ExaClient,
   url: string,
-  args: Record<string, unknown>
+  args: SimilarCommandArgs
 ) {
-  try {
+  await runCommand(async () => {
     const options = buildSimilarOptions(args);
 
-    const hasContentOptions =
-      args.text === true || args.highlights === true || args.summary === true;
-
-    const response = hasContentOptions
+    const response = hasContentOptions(args)
       ? await client.findSimilarAndContents(url, options)
       : await client.findSimilar(url, options);
 
     console.log(
       format.formatSearchResults(response, { json: args.json === true })
     );
-  } catch (error) {
-    console.error(format.formatError(error));
-    process.exit(1);
-  }
+  });
 }
 
-function buildSimilarOptions(args: Record<string, unknown>) {
+function buildSimilarOptions(args: SimilarCommandArgs) {
   const options: Record<string, unknown> = {};
 
   const numResults = parseNumber(args['num-results']);
@@ -38,21 +38,11 @@ function buildSimilarOptions(args: Record<string, unknown>) {
     options.excludeSourceDomain = true;
   }
 
-  if (args.category && typeof args.category === 'string') {
+  if (args.category) {
     options.category = args.category;
   }
 
-  if (args.text === true) {
-    options.text = true;
-  }
-
-  if (args.highlights === true) {
-    options.highlights = true;
-  }
-
-  if (args.summary === true) {
-    options.summary = true;
-  }
+  applyContentOptions(options, args);
 
   return options;
 }

@@ -1,13 +1,15 @@
 import type { ExaClient } from '../client.js';
 import * as format from '../formatters/markdown.js';
+import type { ContentsCommandArgs } from './types.js';
+import { applyContentOptions, runCommand } from '../utils/commands.js';
 import { isValidUrl, parseNumber } from '../utils/validation.js';
 
 export async function contents(
   client: ExaClient,
   urls: string[],
-  args: Record<string, unknown>
+  args: ContentsCommandArgs
 ) {
-  try {
+  await runCommand(async () => {
     for (const url of urls) {
       if (!isValidUrl(url)) {
         console.error(
@@ -22,26 +24,13 @@ export async function contents(
     console.log(
       format.formatSearchResults(response, { json: args.json === true })
     );
-  } catch (error) {
-    console.error(format.formatError(error));
-    process.exit(1);
-  }
+  });
 }
 
-function buildContentsOptions(args: Record<string, unknown>) {
+function buildContentsOptions(args: ContentsCommandArgs) {
   const options: Record<string, unknown> = {};
 
-  if (args.text === true) {
-    options.text = true;
-  }
-
-  if (args.highlights === true) {
-    options.highlights = true;
-  }
-
-  if (args.summary === true) {
-    options.summary = true;
-  }
+  applyContentOptions(options, args);
 
   const maxAgeHours = parseNumber(args['max-age-hours']);
   if (maxAgeHours !== undefined) {

@@ -1,6 +1,14 @@
 import type { ExaClient } from '../client.js';
 import * as format from '../formatters/markdown.js';
+import type {
+  ResearchCreateArgs,
+  ResearchStatusArgs,
+  ResearchListArgs,
+} from './types.js';
+import { runCommand } from '../utils/commands.js';
 import { parseNumber } from '../utils/validation.js';
+
+const INSTRUCTION_PREVIEW_LENGTH = 60;
 
 function mapResearchModel(model?: string): string | undefined {
   const map: Record<string, string> = {
@@ -14,12 +22,12 @@ function mapResearchModel(model?: string): string | undefined {
 export async function researchCreate(
   client: ExaClient,
   instructions: string,
-  args: Record<string, unknown>
+  args: ResearchCreateArgs
 ) {
-  try {
+  await runCommand(async () => {
     const options: Record<string, unknown> = {};
 
-    if (args.model && typeof args.model === 'string') {
+    if (args.model) {
       const mappedModel = mapResearchModel(args.model);
       if (mappedModel) {
         options.model = mappedModel;
@@ -56,31 +64,22 @@ export async function researchCreate(
         console.log(format.formatResearchTask(result, { json: false }));
       }
     }
-  } catch (error) {
-    console.error(format.formatError(error));
-    process.exit(1);
-  }
+  });
 }
 
 export async function researchStatus(
   client: ExaClient,
   researchId: string,
-  args: Record<string, unknown>
+  args: ResearchStatusArgs
 ) {
-  try {
+  await runCommand(async () => {
     const task = await client.research.get(researchId);
     console.log(format.formatResearchTask(task, { json: args.json === true }));
-  } catch (error) {
-    console.error(format.formatError(error));
-    process.exit(1);
-  }
+  });
 }
 
-export async function researchList(
-  client: ExaClient,
-  args: Record<string, unknown>
-) {
-  try {
+export async function researchList(client: ExaClient, args: ResearchListArgs) {
+  await runCommand(async () => {
     const options: { limit?: number; cursor?: string } = {};
 
     const limit = parseNumber(args.limit);
@@ -88,7 +87,7 @@ export async function researchList(
       options.limit = limit;
     }
 
-    if (args.cursor && typeof args.cursor === 'string') {
+    if (args.cursor) {
       options.cursor = args.cursor;
     }
 
@@ -107,7 +106,9 @@ export async function researchList(
       for (const task of result.data) {
         console.log(`- ${task.researchId}: ${task.status}`);
         if (task.instructions) {
-          console.log(`  ${task.instructions.substring(0, 60)}...`);
+          console.log(
+            `  ${task.instructions.substring(0, INSTRUCTION_PREVIEW_LENGTH)}...`
+          );
         }
         console.log('');
       }
@@ -118,8 +119,5 @@ export async function researchList(
         );
       }
     }
-  } catch (error) {
-    console.error(format.formatError(error));
-    process.exit(1);
-  }
+  });
 }

@@ -1,12 +1,14 @@
 import type { ExaClient } from '../client.js';
 import * as format from '../formatters/markdown.js';
+import type { AnswerCommandArgs, Citation } from './types.js';
+import { runCommand, dedupCitations } from '../utils/commands.js';
 
 export async function answer(
   client: ExaClient,
   query: string,
-  args: Record<string, unknown>
+  args: AnswerCommandArgs
 ) {
-  try {
+  await runCommand(async () => {
     const options = buildAnswerOptions(args);
 
     if (args.stream === true) {
@@ -17,10 +19,7 @@ export async function answer(
         format.formatAnswerResponse(response, { json: args.json === true })
       );
     }
-  } catch (error) {
-    console.error(format.formatError(error));
-    process.exit(1);
-  }
+  });
 }
 
 async function streamAnswer(
@@ -32,7 +31,7 @@ async function streamAnswer(
   if (useJson) {
     const jsonResponse = {
       response: '',
-      citations: [] as Array<{ title?: string | null; url: string }>,
+      citations: [] as Citation[],
     };
 
     for await (const chunk of client.streamAnswer(query, options)) {
@@ -40,16 +39,7 @@ async function streamAnswer(
         jsonResponse.response += chunk.content;
         process.stdout.write(chunk.content);
       }
-      if (chunk.citations) {
-        for (const citation of chunk.citations) {
-          if (
-            citation &&
-            !jsonResponse.citations.some((c) => c.url === citation.url)
-          ) {
-            jsonResponse.citations.push(citation);
-          }
-        }
-      }
+      dedupCitations(jsonResponse.citations, chunk.citations);
     }
 
     console.log('\n');
@@ -62,19 +52,13 @@ async function streamAnswer(
     console.log('# Answer (streaming)\n');
     console.log('## Response\n');
 
-    const citations: Array<{ title?: string | null; url: string }> = [];
+    const citations: Citation[] = [];
 
     for await (const chunk of client.streamAnswer(query, options)) {
       if (chunk.content) {
         process.stdout.write(chunk.content);
       }
-      if (chunk.citations) {
-        for (const citation of chunk.citations) {
-          if (citation && !citations.some((c) => c.url === citation.url)) {
-            citations.push(citation);
-          }
-        }
-      }
+      dedupCitations(citations, chunk.citations);
     }
 
     console.log('\n');
@@ -94,18 +78,18 @@ async function streamAnswer(
   }
 }
 
-function buildAnswerOptions(args: Record<string, unknown>) {
+function buildAnswerOptions(args: AnswerCommandArgs) {
   const options: Record<string, unknown> = {};
 
   if (args.text === true) {
     options.text = true;
   }
 
-  if (args.model && typeof args.model === 'string') {
+  if (args.model) {
     options.model = args.model;
   }
 
-  if (args['system-prompt'] && typeof args['system-prompt'] === 'string') {
+  if (args['system-prompt']) {
     options.systemPrompt = args['system-prompt'];
   }
 

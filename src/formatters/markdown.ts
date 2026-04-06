@@ -2,6 +2,10 @@
  * Markdown output formatter
  */
 
+const COST_DECIMALS = 4;
+const SCORE_DECIMALS = 3;
+const HIGHLIGHT_SCORE_DECIMALS = 2;
+
 export function formatSearchResults(
   response: unknown,
   options: { json?: boolean } = {}
@@ -34,7 +38,7 @@ export function formatSearchResults(
   }
 
   if (data.costDollars) {
-    output += `Cost: $${data.costDollars.total?.toFixed(4) || '0.0000'}\n\n`;
+    output += `Cost: $${data.costDollars.total?.toFixed(COST_DECIMALS) || '0.0000'}\n\n`;
   }
 
   if (!data.results || data.results.length === 0) {
@@ -59,7 +63,7 @@ export function formatSearchResults(
     }
 
     if (result.score) {
-      output += `- **Relevance Score:** ${result.score.toFixed(3)}\n`;
+      output += `- **Relevance Score:** ${result.score.toFixed(SCORE_DECIMALS)}\n`;
     }
 
     output += '\n';
@@ -72,7 +76,7 @@ export function formatSearchResults(
       output += '### Highlights\n\n';
       for (let j = 0; j < result.highlights.length; j++) {
         const score = result.highlightScores?.[j];
-        output += `- ${result.highlights[j]}${score ? ` (score: ${score.toFixed(2)})` : ''}\n`;
+        output += `- ${result.highlights[j]}${score ? ` (score: ${score.toFixed(HIGHLIGHT_SCORE_DECIMALS)})` : ''}\n`;
       }
       output += '\n';
     }
@@ -112,7 +116,7 @@ export function formatAnswerResponse(
   }
 
   if (data.costDollars) {
-    output += `Cost: $${data.costDollars.total?.toFixed(4) || '0.0000'}\n\n`;
+    output += `Cost: $${data.costDollars.total?.toFixed(COST_DECIMALS) || '0.0000'}\n\n`;
   }
 
   output += '## Response\n\n';

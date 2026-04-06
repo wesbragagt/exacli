@@ -9,6 +9,15 @@ import * as contents from './commands/contents.js';
 import * as similar from './commands/similar.js';
 import * as answer from './commands/answer.js';
 import * as research from './commands/research.js';
+import type {
+  SearchCommandArgs,
+  SimilarCommandArgs,
+  ContentsCommandArgs,
+  AnswerCommandArgs,
+  ResearchCreateArgs,
+  ResearchStatusArgs,
+  ResearchListArgs,
+} from './commands/types.js';
 import {
   isValidSearchType,
   isValidAnswerModel,
@@ -128,27 +137,14 @@ async function main() {
     process.exit(0);
   }
 
-  const apiKey = values['api-key'] || process.env.EXA_API_KEY;
-  if (!apiKey || typeof apiKey !== 'string') {
-    console.error(
-      'Error: EXA_API_KEY not set. Use --api-key or set EXA_API_KEY environment variable.'
-    );
-    process.exit(1);
-  }
-
-  const client = createClient(apiKey);
+  const client = createClient(resolveApiKey(values));
   const command = positionals[0];
   const args = positionals.slice(1);
-
-  // Convert values to command args
   const commandArgs: Record<string, unknown> = { ...values };
 
   switch (command) {
     case 'search': {
-      if (args.length === 0) {
-        console.error('Error: search requires a query argument');
-        process.exit(1);
-      }
+      requireArgs(args, 'search', 'a query argument');
       if (commandArgs.type && !isValidSearchType(commandArgs.type)) {
         console.error(
           'Error: --type must be one of: auto, fast, deep, instant'
@@ -156,16 +152,21 @@ async function main() {
         process.exit(1);
       }
       const query = args.join(' ');
-      await search.search(client, query, commandArgs);
+      await search.search(
+        client,
+        query,
+        commandArgs as unknown as SearchCommandArgs
+      );
       break;
     }
 
     case 'contents': {
-      if (args.length === 0) {
-        console.error('Error: contents requires at least one URL');
-        process.exit(1);
-      }
-      await contents.contents(client, args, commandArgs);
+      requireArgs(args, 'contents', 'at least one URL');
+      await contents.contents(
+        client,
+        args,
+        commandArgs as unknown as ContentsCommandArgs
+      );
       break;
     }
 
@@ -175,35 +176,41 @@ async function main() {
         console.error('Error: similar requires a URL argument');
         process.exit(1);
       }
-      await similar.similar(client, url, commandArgs);
+      await similar.similar(
+        client,
+        url,
+        commandArgs as unknown as SimilarCommandArgs
+      );
       break;
     }
 
     case 'answer': {
-      if (args.length === 0) {
-        console.error('Error: answer requires a query argument');
-        process.exit(1);
-      }
+      requireArgs(args, 'answer', 'a query argument');
       if (commandArgs.model && !isValidAnswerModel(commandArgs.model)) {
         console.error('Error: --model must be one of: ex, exa-pro');
         process.exit(1);
       }
       const query = args.join(' ');
-      await answer.answer(client, query, commandArgs);
+      await answer.answer(
+        client,
+        query,
+        commandArgs as unknown as AnswerCommandArgs
+      );
       break;
     }
 
     case 'research': {
-      if (args.length === 0) {
-        console.error('Error: research requires instructions argument');
-        process.exit(1);
-      }
+      requireArgs(args, 'research', 'instructions argument');
       if (commandArgs.model && !isValidResearchModel(commandArgs.model)) {
         console.error('Error: --model must be one of: fast, regular, pro');
         process.exit(1);
       }
       const instructions = args.join(' ');
-      await research.researchCreate(client, instructions, commandArgs);
+      await research.researchCreate(
+        client,
+        instructions,
+        commandArgs as unknown as ResearchCreateArgs
+      );
       break;
     }
 
@@ -213,12 +220,19 @@ async function main() {
         console.error('Error: research-status requires a task ID');
         process.exit(1);
       }
-      await research.researchStatus(client, researchId, commandArgs);
+      await research.researchStatus(
+        client,
+        researchId,
+        commandArgs as unknown as ResearchStatusArgs
+      );
       break;
     }
 
     case 'research-list': {
-      await research.researchList(client, commandArgs);
+      await research.researchList(
+        client,
+        commandArgs as unknown as ResearchListArgs
+      );
       break;
     }
 
@@ -227,6 +241,28 @@ async function main() {
       console.log(HELP_TEXT);
       process.exit(1);
     }
+  }
+}
+
+function resolveApiKey(values: Record<string, unknown>): string {
+  const apiKey = values['api-key'] || process.env.EXA_API_KEY;
+  if (!apiKey || typeof apiKey !== 'string') {
+    console.error(
+      'Error: EXA_API_KEY not set. Use --api-key or set EXA_API_KEY environment variable.'
+    );
+    process.exit(1);
+  }
+  return apiKey;
+}
+
+function requireArgs(
+  args: string[],
+  command: string,
+  description: string
+): void {
+  if (args.length === 0) {
+    console.error(`Error: ${command} requires ${description}`);
+    process.exit(1);
   }
 }
 

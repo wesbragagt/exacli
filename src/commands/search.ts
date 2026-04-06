@@ -1,32 +1,32 @@
 import type { ExaClient } from '../client.js';
 import * as format from '../formatters/markdown.js';
+import type { SearchCommandArgs } from './types.js';
+import {
+  hasContentOptions,
+  applyContentOptions,
+  runCommand,
+} from '../utils/commands.js';
 import { parseNumber, parseStringList } from '../utils/validation.js';
 
 export async function search(
   client: ExaClient,
   query: string,
-  args: Record<string, unknown>
+  args: SearchCommandArgs
 ) {
-  try {
+  await runCommand(async () => {
     const options = buildSearchOptions(args);
 
-    const hasContentOptions =
-      args.text === true || args.highlights === true || args.summary === true;
-
-    const response = hasContentOptions
+    const response = hasContentOptions(args)
       ? await client.searchAndContents(query, options)
       : await client.search(query, options);
 
     console.log(
       format.formatSearchResults(response, { json: args.json === true })
     );
-  } catch (error) {
-    console.error(format.formatError(error));
-    process.exit(1);
-  }
+  });
 }
 
-function buildSearchOptions(args: Record<string, unknown>) {
+function buildSearchOptions(args: SearchCommandArgs) {
   const options: Record<string, unknown> = {};
 
   const numResults = parseNumber(args['num-results']);
@@ -44,15 +44,15 @@ function buildSearchOptions(args: Record<string, unknown>) {
     options.excludeDomains = excludeDomains;
   }
 
-  if (args.category && typeof args.category === 'string') {
+  if (args.category) {
     options.category = args.category;
   }
 
-  if (args['start-date'] && typeof args['start-date'] === 'string') {
+  if (args['start-date']) {
     options.startPublishedDate = args['start-date'];
   }
 
-  if (args['end-date'] && typeof args['end-date'] === 'string') {
+  if (args['end-date']) {
     options.endPublishedDate = args['end-date'];
   }
 
@@ -60,21 +60,11 @@ function buildSearchOptions(args: Record<string, unknown>) {
     options.useAutoprompt = true;
   }
 
-  if (args.type && typeof args.type === 'string') {
+  if (args.type) {
     options.type = args.type;
   }
 
-  if (args.text === true) {
-    options.text = true;
-  }
-
-  if (args.highlights === true) {
-    options.highlights = true;
-  }
-
-  if (args.summary === true) {
-    options.summary = true;
-  }
+  applyContentOptions(options, args);
 
   return options;
 }
