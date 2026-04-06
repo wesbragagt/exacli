@@ -6,22 +6,26 @@ All actions pinned to **full 40-character commit SHAs**. Tags are mutable and ca
 
 Format: `uses: owner/action@<full-sha>  # v1.2.3`
 
-Find SHA for a version:
+Find version and SHA:
+
 ```bash
-git ls-remote --tags https://github.com/<owner>/<repo>.git 'v4*' | sort -t/ -k3 -V | tail -1
+for repo in actions/checkout actions/upload-artifact actions/download-artifact actions/cache oven-sh/setup-bun; do
+     tag=$(gh api "repos/$repo/releases/latest" --jq '.tag_name')
+     ref=$(gh api "repos/$repo/git/ref/tags/$tag" --jq '.object')
+     type=$(echo "$ref" | jq -r '.type')
+     sha=$(echo "$ref" | jq -r '.sha')
+     if [ "$type" = "tag" ]; then
+       sha=$(gh api "repos/$repo/git/tags/$sha" --jq '.object.sha')
+     fi
+     echo "$repo@$tag → $sha"
+   done
 ```
 
 Always verify the SHA matches the expected release tag before updating.
 
-## Current Pins
+## Dependency Version Pins
 
-| Action | SHA | Version |
-|--------|-----|---------|
-| actions/checkout | `de0fac2e4500dabe0009e67214ff5f5447ce83dd` | v6.0.2 |
-| oven-sh/setup-bun | `0c5077e51419868618aeaa5fe8019c62421857d6` | v2.2.0 |
-| actions/cache | `cdf6c1fa76f9f475f3d7449005a359c84ca0f306` | v5.0.3 |
-| actions/upload-artifact | `bbbca2ddaa5d8feaa63e36b76fdaad77386f024f` | v7.0.0 |
-| actions/download-artifact | `3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c` | v8.0.1 |
+- **npm packages** (`package.json`): use `^X.Y.Z` (bun resolves exact into lockfile)
 
 ## CI Workflow (`workflows/ci.yml`)
 
