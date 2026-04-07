@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
 
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import { parseArgs } from 'node:util';
+import pkg from '../package.json' with { type: 'json' };
 import { createClient } from './client.js';
 import * as search from './commands/search.js';
 import * as contents from './commands/contents.js';
@@ -27,19 +26,7 @@ import {
   isValidResearchModel,
 } from './utils/validation.js';
 
-function readVersion(): string {
-  try {
-    const pkgPath = path.join(import.meta.dir, '..', 'package.json');
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as {
-      version: string;
-    };
-    return pkg.version;
-  } catch {
-    return '1.0.0';
-  }
-}
-
-const VERSION = readVersion();
+const VERSION = pkg.version;
 
 const HELP_TEXT = `
 Exacli - AI-powered search and content retrieval
