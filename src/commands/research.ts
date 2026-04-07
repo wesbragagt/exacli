@@ -73,7 +73,7 @@ export async function researchStatus(
   args: ResearchStatusArgs
 ) {
   await runCommand(async () => {
-    const task = await client.research.get(researchId);
+    const task = await client.research.get(researchId, { events: true });
     console.log(format.formatResearchTask(task, { json: args.json === true }));
   });
 }

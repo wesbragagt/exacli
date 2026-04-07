@@ -264,7 +264,7 @@ describe('research commands', () => {
           research: { get: { mock: unknown } };
         }
       ).research.get
-    ).toHaveBeenCalledWith('test-id');
+    ).toHaveBeenCalledWith('test-id', { events: true });
   });
 
   test('researchList fetches all tasks', async () => {

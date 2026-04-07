@@ -154,10 +154,20 @@ export function formatResearchTask(
     researchId: string;
     status: string;
     instructions?: string;
+    costDollars?: {
+      total: number;
+      numSearches: number;
+      numPages: number;
+      reasoningTokens: number;
+    };
     output?: {
       parsed?: Record<string, unknown>;
       content?: string;
     };
+    citations?: Array<{
+      url: string;
+      title?: string | null;
+    }>;
     events?: Array<{
       createdAt: number;
       eventType: string;
@@ -173,6 +183,10 @@ export function formatResearchTask(
     output += `- **Instructions:** ${data.instructions}\n`;
   }
 
+  if (data.costDollars) {
+    output += `- **Cost:** $${data.costDollars.total.toFixed(COST_DECIMALS)} (${data.costDollars.numSearches} searches, ${data.costDollars.numPages} pages, ${data.costDollars.reasoningTokens} reasoning tokens)\n`;
+  }
+
   output += '\n';
 
   if (data.output) {
@@ -185,6 +199,16 @@ export function formatResearchTask(
     if (data.output.content) {
       output += `${data.output.content}\n\n`;
     }
+  }
+
+  if (data.citations && data.citations.length > 0) {
+    output += '## Sources\n\n';
+    for (let i = 0; i < data.citations.length; i++) {
+      const citation = data.citations[i];
+      if (!citation) continue;
+      output += `${i + 1}. [${citation.title || 'Untitled'}](${citation.url})\n`;
+    }
+    output += '\n';
   }
 
   if (data.events && data.events.length > 0) {
