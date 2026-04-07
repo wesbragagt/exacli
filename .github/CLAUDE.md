@@ -37,5 +37,5 @@ Always verify the SHA matches the expected release tag before updating.
 
 - Triggers: push of `v*` tags
 - Waits for CI to pass on same commit
-- Builds 4 platform binaries (linux-x64, linux-arm64, darwin-x64, darwin-arm64)
+- Builds 5 platform binaries (linux-x64, linux-arm64, darwin-x64, darwin-arm64, windows-x64)
 - Creates GitHub release with all binaries attached
