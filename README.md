@@ -77,13 +77,28 @@ sudo cp build/exacli /usr/local/bin/
 
 ## Use with AI Assistants
 
-Exacli ships with a canonical skill file (`SKILL.md`) that lets AI coding assistants invoke exacli commands on your behalf. Copy the file to the location your tool expects, then make sure `EXA_API_KEY` is set in your environment — no edits to the skill file are needed.
+Exacli ships with pre-built skill files under `guides/` that let AI coding assistants invoke exacli commands on your behalf. Copy the relevant directory to your project, then make sure `EXA_API_KEY` is set — no edits needed.
 
-| Tool | Placement path |
-|------|---------------|
-| **Claude Code** | `.claude/skills/exacli/SKILL.md` |
-| **opencode** | `.opencode/skills/exacli/SKILL.md` |
-| **Cursor** | `.cursor/rules/exacli.mdc` (or append to `.cursorrules`) |
+### Claude Code
+
+```bash
+cp -r guides/.claude /path/to/your/project/
+```
+
+This places the skill at `.claude/skills/exacli/SKILL.md`, which Claude Code discovers automatically.
+
+For a global install (available in all projects):
+
+```bash
+cp -r guides/.claude ~/.claude/
+```
+
+### Other tools
+
+| Tool | What to copy | Destination |
+|------|-------------|-------------|
+| **opencode** | `SKILL.md` | `.opencode/skills/exacli/SKILL.md` |
+| **Cursor** | `SKILL.md` | `.cursor/rules/exacli.mdc` (or append to `.cursorrules`) |
 
 The YAML frontmatter (`name`, `description`) at the top of `SKILL.md` is used by tools that support it and safely ignored by those that don't.
 
