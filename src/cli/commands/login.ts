@@ -41,7 +41,7 @@ export async function login(args: LoginArgs): Promise<void> {
     process.exit(1);
   }
 
-  console.log(format.formatSuccess('API key saved to OS keychain.'));
+  console.log(await format.formatSuccess('API key saved to OS keychain.'));
 }
 
 async function promptForApiKey(): Promise<string> {

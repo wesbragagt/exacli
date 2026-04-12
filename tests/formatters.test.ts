@@ -27,8 +27,8 @@ describe('formatSearchResults', () => {
     ],
   };
 
-  test('formats search results in markdown', () => {
-    const output = formatSearchResults(mockSearchResponse);
+  test('formats search results in markdown', async () => {
+    const output = await formatSearchResults(mockSearchResponse);
     expect(output).toContain('# Search Results');
     expect(output).toContain('Test Result');
     expect(output).toContain('https://example.com');
@@ -41,20 +41,22 @@ describe('formatSearchResults', () => {
     expect(output).toContain('This is a summary');
   });
 
-  test('returns JSON when json option is true', () => {
-    const output = formatSearchResults(mockSearchResponse, { json: true });
+  test('returns JSON when json option is true', async () => {
+    const output = await formatSearchResults(mockSearchResponse, {
+      json: true,
+    });
     expect(() => JSON.parse(output)).not.toThrow();
     const parsed = JSON.parse(output);
     expect(parsed.requestId).toBe('test-123');
   });
 
-  test('handles empty results', () => {
+  test('handles empty results', async () => {
     const emptyResponse = { requestId: 'test-456', results: [] };
-    const output = formatSearchResults(emptyResponse);
+    const output = await formatSearchResults(emptyResponse);
     expect(output).toContain('No results found');
   });
 
-  test('handles results without optional fields', () => {
+  test('handles results without optional fields', async () => {
     const minimalResponse = {
       results: [
         {
@@ -64,8 +66,18 @@ describe('formatSearchResults', () => {
         },
       ],
     };
-    const output = formatSearchResults(minimalResponse);
+    const output = await formatSearchResults(minimalResponse);
     expect(output).toContain('Untitled');
+  });
+
+  test('returns TOON when toon option is true', async () => {
+    const output = await formatSearchResults(mockSearchResponse, {
+      toon: true,
+    });
+    expect(typeof output).toBe('string');
+    expect(output.length).toBeGreaterThan(0);
+    expect(output.startsWith('#')).toBe(false); // not markdown
+    expect(() => JSON.parse(output)).toThrow(); // not JSON
   });
 });
 
@@ -80,8 +92,8 @@ describe('formatAnswerResponse', () => {
     ],
   };
 
-  test('formats answer in markdown', () => {
-    const output = formatAnswerResponse(mockAnswerResponse);
+  test('formats answer in markdown', async () => {
+    const output = await formatAnswerResponse(mockAnswerResponse);
     expect(output).toContain('# Answer');
     expect(output).toContain('This is the answer');
     expect(output).toContain('answer-123');
@@ -90,20 +102,32 @@ describe('formatAnswerResponse', () => {
     expect(output).toContain('Untitled');
   });
 
-  test('formats object answers as JSON', () => {
+  test('formats object answers as JSON', async () => {
     const objectResponse = {
       answer: { key: 'value', number: 42 },
       citations: [],
     };
-    const output = formatAnswerResponse(objectResponse);
+    const output = await formatAnswerResponse(objectResponse);
     expect(output).toContain('```json');
     expect(output).toContain('"key": "value"');
   });
 
-  test('returns JSON when json option is true', () => {
-    const output = formatAnswerResponse(mockAnswerResponse, { json: true });
+  test('returns JSON when json option is true', async () => {
+    const output = await formatAnswerResponse(mockAnswerResponse, {
+      json: true,
+    });
     const parsed = JSON.parse(output);
     expect(parsed.answer).toBe('This is the answer');
+  });
+
+  test('returns TOON when toon option is true', async () => {
+    const output = await formatAnswerResponse(mockAnswerResponse, {
+      toon: true,
+    });
+    expect(typeof output).toBe('string');
+    expect(output.length).toBeGreaterThan(0);
+    expect(output.startsWith('#')).toBe(false);
+    expect(() => JSON.parse(output)).toThrow();
   });
 });
 
@@ -135,8 +159,8 @@ describe('formatResearchTask', () => {
     ],
   };
 
-  test('formats research task in markdown', () => {
-    const output = formatResearchTask(mockTask);
+  test('formats research task in markdown', async () => {
+    const output = await formatResearchTask(mockTask);
     expect(output).toContain('# Research Task');
     expect(output).toContain('task-123');
     expect(output).toContain('completed');
@@ -146,59 +170,83 @@ describe('formatResearchTask', () => {
     expect(output).toContain('research-start');
   });
 
-  test('formats citations as sources', () => {
-    const output = formatResearchTask(mockTask);
+  test('formats citations as sources', async () => {
+    const output = await formatResearchTask(mockTask);
     expect(output).toContain('## Sources');
     expect(output).toContain('[Source One](https://example.com/1)');
     expect(output).toContain('[Untitled](https://example.com/2)');
   });
 
-  test('formats cost breakdown', () => {
-    const output = formatResearchTask(mockTask);
+  test('formats cost breakdown', async () => {
+    const output = await formatResearchTask(mockTask);
     expect(output).toContain('$0.0059');
     expect(output).toContain('1 searches');
     expect(output).toContain('2 pages');
     expect(output).toContain('100 reasoning tokens');
   });
 
-  test('handles tasks without output or events', () => {
+  test('handles tasks without output or events', async () => {
     const minimalTask = {
       researchId: 'task-456',
       status: 'pending',
     };
-    const output = formatResearchTask(minimalTask);
+    const output = await formatResearchTask(minimalTask);
     expect(output).toContain('task-456');
     expect(output).toContain('pending');
     expect(output).not.toContain('## Output');
     expect(output).not.toContain('## Events');
   });
 
-  test('returns JSON when json option is true', () => {
-    const output = formatResearchTask(mockTask, { json: true });
+  test('returns JSON when json option is true', async () => {
+    const output = await formatResearchTask(mockTask, { json: true });
     const parsed = JSON.parse(output);
     expect(parsed.researchId).toBe('task-123');
+  });
+
+  test('returns TOON when toon option is true', async () => {
+    const output = await formatResearchTask(mockTask, { toon: true });
+    expect(typeof output).toBe('string');
+    expect(output.length).toBeGreaterThan(0);
+    expect(output.startsWith('#')).toBe(false);
+    expect(() => JSON.parse(output)).toThrow();
   });
 });
 
 describe('formatError', () => {
-  test('formats Error instances', () => {
+  test('formats Error instances', async () => {
     const error = new Error('Something went wrong');
-    expect(formatError(error)).toBe('Error: Something went wrong');
+    expect(await formatError(error)).toBe('Error: Something went wrong');
   });
 
-  test('formats non-Error values', () => {
-    expect(formatError('string error')).toBe('Error: string error');
-    expect(formatError(42)).toBe('Error: 42');
-    expect(formatError(null)).toBe('Error: null');
-    expect(formatError(undefined)).toBe('Error: undefined');
+  test('formats non-Error values', async () => {
+    expect(await formatError('string error')).toBe('Error: string error');
+    expect(await formatError(42)).toBe('Error: 42');
+    expect(await formatError(null)).toBe('Error: null');
+    expect(await formatError(undefined)).toBe('Error: undefined');
+  });
+
+  test('returns TOON when toon option is true', async () => {
+    const output = await formatError(new Error('Something went wrong'), {
+      toon: true,
+    });
+    expect(typeof output).toBe('string');
+    expect(output.length).toBeGreaterThan(0);
+    expect(output.startsWith('Error:')).toBe(false);
   });
 });
 
 describe('formatSuccess', () => {
-  test('formats success messages', () => {
-    expect(formatSuccess('Task completed')).toBe('[OK] Task completed');
-    expect(formatSuccess('Operation successful')).toBe(
+  test('formats success messages', async () => {
+    expect(await formatSuccess('Task completed')).toBe('[OK] Task completed');
+    expect(await formatSuccess('Operation successful')).toBe(
       '[OK] Operation successful'
     );
+  });
+
+  test('returns TOON when toon option is true', async () => {
+    const output = await formatSuccess('Task completed', { toon: true });
+    expect(typeof output).toBe('string');
+    expect(output.length).toBeGreaterThan(0);
+    expect(output.startsWith('[OK]')).toBe(false);
   });
 });

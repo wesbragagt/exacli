@@ -48,6 +48,7 @@ Commands:
 Global Options:
   --api-key <key>          Exa API key (or EXA_API_KEY env var)
   --json                   Output raw JSON instead of markdown
+  --toon                   Output compact TOON format (for agent/LLM consumers)
   --version                Show version information
   -h, --help              Show this help message
 
@@ -56,7 +57,7 @@ Authentication Options:
 
 Search Options:
   --num-results <n>        Number of results (default: 10)
-  --type <auto|fast|deep|instant>  Search type
+  --type <type>            Search type: auto|neural|keyword|hybrid|fast|instant|deep|deep-lite|deep-reasoning
   --text                   Include text content
   --highlights             Include highlights
   --summary                Include summary
@@ -95,6 +96,7 @@ async function main() {
     options: {
       'api-key': { type: 'string' },
       json: { type: 'boolean' },
+      toon: { type: 'boolean' },
       help: { type: 'boolean', short: 'h' },
       version: { type: 'boolean' },
       'num-results': { type: 'string' },
@@ -157,7 +159,7 @@ async function main() {
       requireArgs(args, 'search', 'a query argument');
       if (commandArgs.type && !isValidSearchType(commandArgs.type)) {
         console.error(
-          'Error: --type must be one of: auto, fast, deep, instant'
+          'Error: --type must be one of: auto, neural, keyword, hybrid, fast, instant, deep, deep-lite, deep-reasoning'
         );
         process.exit(1);
       }
@@ -285,7 +287,7 @@ function requireArgs(
   }
 }
 
-main().catch((error) => {
-  console.error(format.formatError(error));
+main().catch(async (error) => {
+  console.error(await format.formatError(error));
   process.exit(1);
 });

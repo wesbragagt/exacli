@@ -21,7 +21,10 @@ export async function similar(
       : await client.findSimilar(url, options);
 
     console.log(
-      format.formatSearchResults(response, { json: args.json === true })
+      await format.formatSearchResults(response, {
+        json: args.json === true,
+        toon: args.toon === true,
+      })
     );
   });
 }

@@ -16,7 +16,10 @@ export async function answer(
     } else {
       const response = await client.answer(query, options);
       console.log(
-        format.formatAnswerResponse(response, { json: args.json === true })
+        await format.formatAnswerResponse(response, {
+          json: args.json === true,
+          toon: args.toon === true,
+        })
       );
     }
   });

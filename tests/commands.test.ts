@@ -1,5 +1,6 @@
 import { describe, test, expect, mock } from 'bun:test';
 import type { ExaClient } from '../src/client.js';
+import type { BaseCommandArgs } from '../src/commands/types.js';
 import * as search from '../src/commands/search.js';
 import * as contents from '../src/commands/contents.js';
 import * as similar from '../src/commands/similar.js';
@@ -408,5 +409,12 @@ describe('runCommand', () => {
     ).rejects.toThrow('process.exit called');
 
     process.exit = originalExit;
+  });
+});
+
+describe('BaseCommandArgs toon flag', () => {
+  test('BaseCommandArgs accepts toon flag', () => {
+    const args: BaseCommandArgs = { toon: true };
+    expect(args.toon).toBe(true);
   });
 });

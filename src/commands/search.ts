@@ -21,7 +21,10 @@ export async function search(
       : await client.search(query, options);
 
     console.log(
-      format.formatSearchResults(response, { json: args.json === true })
+      await format.formatSearchResults(response, {
+        json: args.json === true,
+        toon: args.toon === true,
+      })
     );
   });
 }

@@ -9,7 +9,7 @@ export async function logout(): Promise<void> {
     return;
   }
 
-  console.log(format.formatSuccess('API key removed.'));
+  console.log(await format.formatSuccess('API key removed.'));
 
   if (process.env.EXA_API_KEY) {
     console.log('Note: EXA_API_KEY environment variable is still set.');

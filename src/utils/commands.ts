@@ -26,7 +26,7 @@ export async function runCommand(fn: () => Promise<void>): Promise<void> {
   try {
     await fn();
   } catch (error) {
-    console.error(format.formatError(error));
+    console.error(await format.formatError(error));
     process.exit(1);
   }
 }

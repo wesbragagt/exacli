@@ -45,8 +45,10 @@ export async function researchCreate(
 
     if (args.json === true) {
       console.log(JSON.stringify(task, null, 2));
-    } else {
-      console.log(format.formatSuccess(`Research task created`));
+    } else if (args.toon === true) {
+      console.log(
+        await format.formatSuccess(`Research task created`, { toon: true })
+      );
       console.log(`Task ID: ${task.researchId}`);
       console.log(`Status: ${task.status}`);
 
@@ -61,7 +63,25 @@ export async function researchCreate(
             timeoutMs,
           }
         );
-        console.log(format.formatResearchTask(result, { json: false }));
+        console.log(await format.formatResearchTask(result, { toon: true }));
+      }
+    } else {
+      console.log(await format.formatSuccess(`Research task created`));
+      console.log(`Task ID: ${task.researchId}`);
+      console.log(`Status: ${task.status}`);
+
+      if (args.poll === true) {
+        console.log('\nPolling for results...\n');
+        const pollInterval = parseNumber(args['poll-interval']) || 1000;
+        const timeoutMs = parseNumber(args.timeout) || 600000;
+        const result = await client.research.pollUntilFinished(
+          task.researchId,
+          {
+            pollInterval,
+            timeoutMs,
+          }
+        );
+        console.log(await format.formatResearchTask(result, { json: false }));
       }
     }
   });
@@ -74,7 +94,12 @@ export async function researchStatus(
 ) {
   await runCommand(async () => {
     const task = await client.research.get(researchId, { events: true });
-    console.log(format.formatResearchTask(task, { json: args.json === true }));
+    console.log(
+      await format.formatResearchTask(task, {
+        json: args.json === true,
+        toon: args.toon === true,
+      })
+    );
   });
 }
 
@@ -95,6 +120,8 @@ export async function researchList(client: ExaClient, args: ResearchListArgs) {
 
     if (args.json === true) {
       console.log(JSON.stringify(result, null, 2));
+    } else if (args.toon === true) {
+      console.log(await format.formatResearchTask(result, { toon: true }));
     } else {
       console.log('# Research Tasks\n');
 

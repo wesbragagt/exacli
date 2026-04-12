@@ -34,7 +34,17 @@ export function parseStringList(value: unknown): string[] | undefined {
 }
 
 export function isValidSearchType(value: unknown): value is string {
-  const validTypes = ['auto', 'fast', 'deep', 'instant'];
+  const validTypes = [
+    'auto',
+    'fast',
+    'deep',
+    'instant',
+    'neural',
+    'keyword',
+    'hybrid',
+    'deep-lite',
+    'deep-reasoning',
+  ];
   return typeof value === 'string' && validTypes.includes(value);
 }
 

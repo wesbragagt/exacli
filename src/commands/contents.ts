@@ -22,7 +22,10 @@ export async function contents(
     const options = buildContentsOptions(args);
     const response = await client.getContents(urls, options);
     console.log(
-      format.formatSearchResults(response, { json: args.json === true })
+      await format.formatSearchResults(response, {
+        json: args.json === true,
+        toon: args.toon === true,
+      })
     );
   });
 }

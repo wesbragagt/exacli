@@ -1,5 +1,6 @@
 export interface BaseCommandArgs {
   json?: boolean;
+  toon?: boolean;
 }
 
 export interface ContentArgs {

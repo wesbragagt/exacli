@@ -2,14 +2,35 @@
  * Markdown output formatter
  */
 
+async function loadEncode(): Promise<
+  (input: unknown, options?: { keyFolding?: 'off' | 'safe' }) => string
+> {
+  try {
+    const mod = await import('@toon-format/toon');
+    return mod.encode;
+  } catch {
+    throw new Error(
+      'TOON output requires @toon-format/toon to be installed. Run: bun install'
+    );
+  }
+}
+
+async function toToon(data: unknown): Promise<string> {
+  const encode = await loadEncode();
+  return encode(data, { keyFolding: 'safe' });
+}
+
 const COST_DECIMALS = 4;
 const SCORE_DECIMALS = 3;
 const HIGHLIGHT_SCORE_DECIMALS = 2;
 
-export function formatSearchResults(
+export async function formatSearchResults(
   response: unknown,
-  options: { json?: boolean } = {}
-) {
+  options: { json?: boolean; toon?: boolean } = {}
+): Promise<string> {
+  if (options.toon) {
+    return toToon(response);
+  }
   if (options.json) {
     return JSON.stringify(response, null, 2);
   }
@@ -91,10 +112,13 @@ export function formatSearchResults(
   return output;
 }
 
-export function formatAnswerResponse(
+export async function formatAnswerResponse(
   response: unknown,
-  options: { json?: boolean } = {}
-) {
+  options: { json?: boolean; toon?: boolean } = {}
+): Promise<string> {
+  if (options.toon) {
+    return toToon(response);
+  }
   if (options.json) {
     return JSON.stringify(response, null, 2);
   }
@@ -142,10 +166,13 @@ export function formatAnswerResponse(
   return output;
 }
 
-export function formatResearchTask(
+export async function formatResearchTask(
   task: unknown,
-  options: { json?: boolean } = {}
-) {
+  options: { json?: boolean; toon?: boolean } = {}
+): Promise<string> {
+  if (options.toon) {
+    return toToon(task);
+  }
   if (options.json) {
     return JSON.stringify(task, null, 2);
   }
@@ -223,13 +250,23 @@ export function formatResearchTask(
   return output;
 }
 
-export function formatError(error: unknown) {
-  if (error instanceof Error) {
-    return `Error: ${error.message}`;
+export async function formatError(
+  error: unknown,
+  options: { toon?: boolean } = {}
+): Promise<string> {
+  const message = error instanceof Error ? error.message : String(error);
+  if (options.toon) {
+    return toToon({ error: message });
   }
-  return `Error: ${String(error)}`;
+  return `Error: ${message}`;
 }
 
-export function formatSuccess(message: string) {
+export async function formatSuccess(
+  message: string,
+  options: { toon?: boolean } = {}
+): Promise<string> {
+  if (options.toon) {
+    return toToon({ message });
+  }
   return `[OK] ${message}`;
 }
