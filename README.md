@@ -1,6 +1,6 @@
 # Exacli
 
-A Bun-native TypeScript CLI for the [Exa AI](https://exa.ai) search API. Search the web semantically, extract content from URLs, get AI-powered answers with citations, and conduct automated research - all from your terminal.
+A Go CLI for the [Exa AI](https://exa.ai) search API. Search the web semantically, extract content from URLs, get AI-powered answers with citations, and conduct automated research — all from your terminal. Statically linked, zero runtime dependencies.
 
 > **Attribution:** Based on [exa-cli](https://github.com/sandiiarov/exa-cli) by Alex Sandiiarov. Now maintained by [SoftwareStartups](https://github.com/SoftwareStartups).
 
@@ -16,50 +16,46 @@ A Bun-native TypeScript CLI for the [Exa AI](https://exa.ai) search API. Search 
 
 ## Installation
 
-### From GitHub Releases (recommended)
+### With Nix
 
-Download a pre-compiled binary for your platform from [GitHub Releases](https://github.com/SoftwareStartups/exacli/releases):
+If you have [Nix](https://nixos.org) installed, you can run exacli directly without any other prerequisites:
 
 ```bash
-# macOS (Apple Silicon)
-curl -L https://github.com/SoftwareStartups/exacli/releases/latest/download/exacli-darwin-arm64 -o exacli
-chmod +x exacli
-sudo mv exacli /usr/local/bin/
+nix run github:SoftwareStartups/exacli -- search "latest AI news"
+```
 
-# macOS (Intel)
-curl -L https://github.com/SoftwareStartups/exacli/releases/latest/download/exacli-darwin-x64 -o exacli
-chmod +x exacli
-sudo mv exacli /usr/local/bin/
+Or install it into your profile:
 
-# Linux (x64)
-curl -L https://github.com/SoftwareStartups/exacli/releases/latest/download/exacli-linux-x64 -o exacli
-chmod +x exacli
-sudo mv exacli /usr/local/bin/
-
-# Linux (ARM64)
-curl -L https://github.com/SoftwareStartups/exacli/releases/latest/download/exacli-linux-arm64 -o exacli
-chmod +x exacli
-sudo mv exacli /usr/local/bin/
+```bash
+nix profile install github:SoftwareStartups/exacli
 ```
 
 ### From Source
 
-Prerequisites: [Bun](https://bun.sh) and [Task](https://taskfile.dev)
+Prerequisites: [Go 1.21+](https://go.dev/dl/) and [Task](https://taskfile.dev)
 
 ```bash
 git clone https://github.com/SoftwareStartups/exacli.git
 cd exacli
-bun install
+go mod download
 task build
-bun link
+sudo cp build/exacli /usr/local/bin/
 ```
 
 ## Configuration
+
+### API Key
 
 Set your Exa API key as an environment variable:
 
 ```bash
 export EXA_API_KEY="your-api-key-here"
+```
+
+Or store it securely in your OS keychain:
+
+```bash
+exacli login
 ```
 
 Or pass it with each command:
@@ -69,6 +65,8 @@ exacli search "AI startups" --api-key "your-api-key-here"
 ```
 
 Get your API key at [https://dashboard.exa.ai/api-keys](https://dashboard.exa.ai/api-keys)
+
+**Resolution order:** `--api-key` flag → `EXA_API_KEY` env var → OS keychain
 
 ## Usage with Claude Code
 
@@ -141,54 +139,67 @@ exacli research-status "task-id"
 exacli research-list --limit 10
 ```
 
+### `login` / `logout`
+
+Store or remove your Exa API key in the OS keychain.
+
+```bash
+exacli login
+exacli logout
+```
+
 ## Global Options
 
 | Flag | Description |
 |------|-------------|
-| `--api-key <key>` | Exa API key (alternative to EXA_API_KEY env var) |
+| `--api-key <key>` | Exa API key (overrides EXA_API_KEY env var and keychain) |
 | `--json` | Output raw JSON instead of formatted markdown |
+| `--toon` | Output compact TOON format |
 | `--version` | Show version information |
 | `-h, --help` | Show help message |
 
 ## Development
 
-Prerequisites: [Bun](https://bun.sh) and [Task](https://taskfile.dev)
+Prerequisites: [Go 1.21+](https://go.dev/dl/) and [Task](https://taskfile.dev)
 
 ```bash
-bun install                          # Install dependencies
-task build                           # Compile TypeScript to build/
-task lint                            # Lint with Biome
-task format                          # Format with Biome
+go mod download                      # Download dependencies
+task build                           # Build binary to build/exacli
+task lint                            # go vet ./...
 task test                            # Run tests
-task check                           # Lint + typecheck + tests
-task ci                              # Full CI pipeline locally
-task compile                         # Build standalone binary
-task compile:all                     # Build all 4 platform binaries
+task check                           # Lint + tests
+task ci                              # Full CI: clean -> check -> build
+task compile                         # CGO_ENABLED=0 binary for current platform -> dist/exacli
+task compile:all                     # Binaries for all 8 platforms -> dist/
+task compile:native                  # Platform-suffixed binary -> dist/exacli-<os>-<arch>
+task clean                           # Remove build/ and dist/
 ```
 
 ## Project Structure
 
 ```
 exacli/
-├── src/
-│   ├── index.ts              # CLI entry point
-│   ├── client.ts             # Exa SDK wrapper
+├── cmd/exacli/
+│   └── main.go               # Entry point — calls commands.Execute()
+├── internal/
+│   ├── client/
+│   │   └── client.go         # Exa HTTP client (all endpoints, SSE streaming, polling)
 │   ├── commands/
-│   │   ├── types.ts          # Command arg interfaces and shared types
-│   │   ├── search.ts         # Web search
-│   │   ├── contents.ts       # URL content extraction
-│   │   ├── similar.ts        # Similar page discovery
-│   │   ├── answer.ts         # AI-powered answers
-│   │   └── research.ts       # Research tasks
+│   │   ├── root.go           # Cobra root command, global flags, ResolveAPIKey()
+│   │   ├── search.go         # search <query>
+│   │   ├── contents.go       # contents <url...>
+│   │   ├── similar.go        # similar <url>
+│   │   ├── answer.go         # answer <query> (+ --stream SSE)
+│   │   ├── research.go       # research / research-status / research-list
+│   │   └── auth.go           # login / logout (OS keychain via go-keyring)
 │   ├── formatters/
-│   │   └── markdown.ts       # Output formatting
+│   │   └── formatters.go     # Markdown, JSON, TOON output formatting
 │   └── utils/
-│       ├── commands.ts       # Shared command helpers
-│       └── validation.ts     # Input validation
-├── tests/                    # Test files
+│       └── validation.go     # Input validation (URLs, search types, models)
+├── archive/                  # TypeScript source (archived)
 ├── build/                    # Compiled output (generated)
 ├── dist/                     # Standalone binaries (generated)
-└── package.json
+└── go.mod
 ```
 
 ## License

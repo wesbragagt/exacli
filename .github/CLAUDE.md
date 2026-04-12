@@ -9,7 +9,7 @@ Format: `uses: owner/action@<full-sha>  # v1.2.3`
 Resolve latest version and SHA:
 
 ```bash
-for repo in actions/checkout actions/upload-artifact actions/download-artifact actions/cache oven-sh/setup-bun; do
+for repo in actions/checkout actions/setup-go arduino/setup-task; do
   tag=$(gh api "repos/$repo/releases/latest" --jq '.tag_name')
   ref=$(gh api "repos/$repo/git/ref/tags/$tag" --jq '.object')
   type=$(echo "$ref" | jq -r '.type')
@@ -25,20 +25,11 @@ done
 
 - Triggers: push to any branch, PRs to `main`
 - Permissions: `contents: read` only
-- Jobs: lint-and-typecheck → build
-- Uses `task` commands for all CI steps
+- Jobs: check (lint + test) → build
+- Uses `actions/setup-go` with `go-version-file: go.mod` and dependency caching
+- Uses `arduino/setup-task` for the `task` runner
+- Task commands: `task lint` (`go vet ./...`), `task test` (`go test ./...`), `task build`
 
-## Release Workflow (`workflows/release.yml`)
+## No Release Workflow
 
-- Triggers: push of `v*` tags
-- Permissions: `contents: write`, `actions: read`
-- Verifies CI passed for the tagged commit before building
-- 6-platform binary matrix: linux-x64, linux-arm64, darwin-x64, darwin-arm64, windows-x64, windows-arm64
-- Binary naming: `exacli-<os>-<arch>[.exe]`
-- Creates GitHub release with compiled binaries
-
-## Custom Actions
-
-### `.github/actions/setup-bun-env/`
-
-Installs Bun and caches dependencies via `bun install --frozen-lockfile`.
+Releases are not automated. Users build from source — see README.

@@ -4,33 +4,33 @@
 
 ## Overview
 
-Exacli is a command-line interface for the Exa AI search API. It provides commands for semantic web search, content extraction, AI-powered Q&A, and automated research tasks. Built with Bun and TypeScript, it outputs formatted markdown by default with JSON support for scripting.
+Exacli is a command-line interface for the Exa AI search API. Written in Go with zero runtime dependencies. It provides commands for semantic web search, content extraction, AI-powered Q&A, and automated research tasks. Outputs formatted markdown by default with JSON and TOON format support for scripting.
 
 ## Installation
 
 ```bash
-# Download binary from GitHub Releases
-curl -L https://github.com/SoftwareStartups/exacli/releases/latest/download/exacli-darwin-arm64 -o exacli
-chmod +x exacli
-sudo mv exacli /usr/local/bin/
-
-# Or build from source
+# Build from source (requires Go 1.21+ and Task)
 git clone https://github.com/SoftwareStartups/exacli.git
 cd exacli
-bun install
+go mod download
 task build
-bun link
+sudo cp build/exacli /usr/local/bin/
 ```
 
 ## Configuration
 
-Set your Exa API key as an environment variable:
-
 ```bash
+# Store API key in OS keychain
+exacli login
+
+# Or set as environment variable
 export EXA_API_KEY="your-api-key-here"
+
+# Or pass per command
+exacli search "query" --api-key "your-key"
 ```
 
-Or pass it with each command using `--api-key`.
+API key resolution order: `--api-key` flag → `EXA_API_KEY` env var → OS keychain
 
 Get your API key at: https://dashboard.exa.ai/api-keys
 
@@ -147,10 +147,17 @@ exacli research-list [options]
 - `--limit <n>`: Number of tasks
 - `--cursor <token>`: Pagination cursor
 
+### Auth
+```bash
+exacli login   # Store API key in OS keychain
+exacli logout  # Remove API key from OS keychain
+```
+
 ## Global Options
 
 - `--api-key <key>`: Exa API key
 - `--json`: Output raw JSON instead of markdown
+- `--toon`: Output compact TOON format
 - `-h, --help`: Show help
 
 ## Examples
@@ -186,11 +193,13 @@ exacli research-list --limit 10
 ## Development
 
 ```bash
-bun install        # Install dependencies
-task build         # Compile TypeScript
-task test          # Run tests
-task ci            # Full CI pipeline
-task compile       # Build binary
+go mod download  # Download dependencies
+task build       # Build binary to build/exacli
+task lint        # go vet ./...
+task test        # Run tests
+task check       # Lint + tests
+task ci          # Full CI pipeline
+task compile     # Optimized binary -> dist/exacli
 ```
 
 ## Documentation
@@ -199,11 +208,6 @@ task compile       # Build binary
 - [Exa API Docs](https://exa.ai/docs): Official Exa API documentation
 - [Issues](https://github.com/SoftwareStartups/exacli/issues): Report bugs or request features
 
-## Optional
-
-- [API Reference](https://exa.ai/docs/rest-api): Complete API documentation
-- [TypeScript SDK](https://github.com/exa-labs/exa-js): Official SDK used by this CLI
-
 ---
 
-MIT License. Built with Bun and the Exa API.
+MIT License. Built with Go and the Exa API.

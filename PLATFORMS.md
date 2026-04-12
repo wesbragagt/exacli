@@ -1,6 +1,7 @@
 # Platform Targets
 
 exacli ships binaries for 8 platforms via `task compile:all` and the release workflow.
+All targets are cross-compiled with `CGO_ENABLED=0` using the standard Go toolchain.
 
 ## Decision Record
 
@@ -8,20 +9,22 @@ exacli ships binaries for 8 platforms via `task compile:all` and the release wor
 
 - Preserves Windows coverage for existing users
 - Adds musl variants for Alpine Linux / Docker environments
-- All targets can be cross-compiled from `ubuntu-latest` or `ubuntu-24.04-arm`
+- All targets can be cross-compiled from any platform with Go installed
 
 ## Target List
 
-| Bun target              | Output file                    | Runner               |
-|-------------------------|-------------------------------|----------------------|
-| `bun-linux-x64`         | `exacli-linux-x64`            | `ubuntu-latest`      |
-| `bun-linux-arm64`       | `exacli-linux-arm64`          | `ubuntu-24.04-arm`   |
-| `bun-linux-x64-musl`    | `exacli-linux-x64-musl`       | `ubuntu-latest`      |
-| `bun-linux-arm64-musl`  | `exacli-linux-arm64-musl`     | `ubuntu-24.04-arm`   |
-| `bun-darwin-x64`        | `exacli-darwin-x64`           | `ubuntu-latest`      |
-| `bun-darwin-arm64`      | `exacli-darwin-arm64`         | `macos-15`           |
-| `bun-windows-x64`       | `exacli-windows-x64.exe`      | `ubuntu-latest`      |
-| `bun-windows-arm64`     | `exacli-windows-arm64.exe`    | `ubuntu-latest`      |
+| GOOS/GOARCH                        | Output file                    |
+|------------------------------------|-------------------------------|
+| `linux/amd64`                      | `exacli-linux-x64`            |
+| `linux/arm64`                      | `exacli-linux-arm64`          |
+| `linux/amd64` (static)             | `exacli-linux-x64-musl`       |
+| `linux/arm64` (static)             | `exacli-linux-arm64-musl`     |
+| `darwin/amd64`                     | `exacli-darwin-x64`           |
+| `darwin/arm64`                     | `exacli-darwin-arm64`         |
+| `windows/amd64`                    | `exacli-windows-x64.exe`      |
+| `windows/arm64`                    | `exacli-windows-arm64.exe`    |
+
+musl variants are built with `-extldflags=-static` for fully static binaries.
 
 ## Naming Convention
 
