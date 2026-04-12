@@ -4,6 +4,10 @@ A Go CLI for the [Exa AI](https://exa.ai) search API. Search the web semanticall
 
 > **Attribution:** Based on [exa-cli](https://github.com/sandiiarov/exa-cli) by Alex Sandiiarov. Now maintained by [wesbragagt](https://github.com/wesbragagt).
 
+## Why Go?
+
+The original required Bun and kept segfaulting inside a sandboxed harness — that was enough. Go gives you a tiny static binary you can cross-compile for any platform with one command (`task compile:all`), no runtime babysitting required. I'm also just biased: Go is my favorite way to write a CLI.
+
 ## What is it?
 
 `exacli` is a command-line tool that communicates with the Exa AI search API. It can be used standalone or through Claude Code to:
@@ -71,6 +75,35 @@ task build
 sudo cp build/exacli /usr/local/bin/
 ```
 
+## Use with AI Assistants
+
+Exacli ships with pre-built skill files under `guides/` that let AI coding assistants invoke exacli commands on your behalf. Copy the relevant directory to your project, then make sure `EXA_API_KEY` is set — no edits needed.
+
+### Claude Code
+
+```bash
+cp -r guides/.claude /path/to/your/project/
+```
+
+This places the skill at `.claude/skills/exacli/SKILL.md`, which Claude Code discovers automatically.
+
+For a global install (available in all projects):
+
+```bash
+cp -r guides/.claude ~/.claude/
+```
+
+### Other tools
+
+| Tool | What to copy | Destination |
+|------|-------------|-------------|
+| **opencode** | `SKILL.md` | `.opencode/skills/exacli/SKILL.md` |
+| **Cursor** | `SKILL.md` | `.cursor/rules/exacli.mdc` (or append to `.cursorrules`) |
+
+The YAML frontmatter (`name`, `description`) at the top of `SKILL.md` is used by tools that support it and safely ignored by those that don't.
+
+> **Note:** Configure your API key in the environment (`EXA_API_KEY`) before asking your assistant to use exacli. See [Configuration](#configuration) below.
+
 ## Configuration
 
 ### API Key
@@ -96,10 +129,6 @@ exacli search "AI startups" --api-key "your-api-key-here"
 Get your API key at [https://dashboard.exa.ai/api-keys](https://dashboard.exa.ai/api-keys)
 
 **Resolution order:** `--api-key` flag → `EXA_API_KEY` env var → OS keychain
-
-## Usage with Claude Code
-
-When installed on your system, Claude Code can use `exacli` to search the web, extract content, and conduct research. The included skill (`.claude/skills/exacli/`) provides Claude Code with command reference and usage patterns.
 
 ## Commands
 
@@ -186,6 +215,33 @@ exacli logout
 | `--toon` | Output compact TOON format |
 | `--version` | Show version information |
 | `-h, --help` | Show help message |
+
+### Output Format Trade-offs
+
+The three formats make different token/size trade-offs that matter when output flows into an AI context window.
+
+Measured on a 10-result metadata-only search (no `--text`, `--highlights`, `--summary`):
+
+| Format | Characters | Est. tokens | When to use |
+|--------|-----------|-------------|-------------|
+| Default (markdown) | ~3,300 | ~830 | Best baseline — omits null/empty fields entirely |
+| `--toon` | ~4,200 | ~1,050 | Includes empty fields as flat `key: value` pairs |
+| `--json` | ~5,000 | ~1,250 | Most verbose — includes all nulls + structural overhead |
+
+**Why JSON is largest:** every result carries `"highlights": null`, `"highlightScores": null`, `"text": ""`, and `"summary": ""` even when empty, plus JSON structural characters (quotes, brackets, commas on every key).
+
+**Why default markdown is smallest for sparse results:** the formatter skips null and empty fields entirely, emitting only populated data.
+
+**When the ranking shifts:** once results include actual content (`--text`, `--highlights`, `--summary`), `--toon` becomes the most compact option because it uses flat `key: value` lines with no markdown formatting overhead (no section headers, no bold labels per field).
+
+**Recommendations:**
+
+| Use case | Best format |
+|----------|-------------|
+| AI agent, metadata only | Default (markdown) |
+| AI agent, with content | `--toon` |
+| Scripting / field extraction | `--json \| jq` |
+| Human reading | Default (markdown) |
 
 ## Development
 

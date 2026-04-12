@@ -23,8 +23,8 @@ dist/
 # Worktrees
 .worktrees/
 
-# Claude Code
-.claude/settings.local.json
+# Claude Code (local config — use guides/.claude/ as the shareable template)
+/.claude/
 
 # Notes
 TODO.md
