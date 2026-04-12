@@ -30,7 +30,7 @@ jobs:
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
-          gc-enabled: false
+
 
       - name: Warm devShell
         run: nix develop --command true
@@ -54,7 +54,7 @@ jobs:
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
-          gc-enabled: false
+
 
       - name: Lint
         run: nix develop --command task lint
@@ -78,7 +78,7 @@ jobs:
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
-          gc-enabled: false
+
 
       - name: Test
         run: nix develop --command task test
@@ -102,7 +102,7 @@ jobs:
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
-          gc-enabled: false
+
 
       - name: Build
         run: nix develop --command task build
