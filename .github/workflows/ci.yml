@@ -26,6 +26,8 @@ jobs:
 
       - name: Cache Nix store
         uses: DeterminateSystems/magic-nix-cache-action@565684385bcd71bad329742eefe8d12f2e765b39 # v13
+        with:
+          use-flakehub: false
 
       - name: Warm devShell
         run: nix develop --command true
@@ -44,6 +46,8 @@ jobs:
 
       - name: Cache Nix store
         uses: DeterminateSystems/magic-nix-cache-action@565684385bcd71bad329742eefe8d12f2e765b39 # v13
+        with:
+          use-flakehub: false
 
       - name: Lint
         run: nix develop --command task lint
@@ -62,6 +66,8 @@ jobs:
 
       - name: Cache Nix store
         uses: DeterminateSystems/magic-nix-cache-action@565684385bcd71bad329742eefe8d12f2e765b39 # v13
+        with:
+          use-flakehub: false
 
       - name: Test
         run: nix develop --command task test
@@ -80,6 +86,8 @@ jobs:
 
       - name: Cache Nix store
         uses: DeterminateSystems/magic-nix-cache-action@565684385bcd71bad329742eefe8d12f2e765b39 # v13
+        with:
+          use-flakehub: false
 
       - name: Build
         run: nix develop --command task build
