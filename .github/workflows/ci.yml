@@ -31,12 +31,11 @@ jobs:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
 
-
       - name: Warm devShell
         run: nix develop --command true
 
-  lint:
-    name: Lint
+  check:
+    name: Lint & Test
     needs: setup
     runs-on: ubuntu-latest
 
@@ -54,31 +53,9 @@ jobs:
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
-
 
       - name: Lint
         run: nix develop --command task lint
-
-  test:
-    name: Test
-    needs: setup
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@616559265b40713947b9c190a8ff4b507b5df49b # v31.10.4
-        with:
-          github_access_token: ${{ github.token }}
-
-      - name: Cache Nix store
-        uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7
-        with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
-          restore-prefixes-first-match: nix-${{ runner.os }}-
-
 
       - name: Test
         run: nix develop --command task test
@@ -102,7 +79,6 @@ jobs:
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
-
 
       - name: Build
         run: nix develop --command task build
