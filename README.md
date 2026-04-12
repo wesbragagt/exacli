@@ -6,7 +6,7 @@ A Go CLI for the [Exa AI](https://exa.ai) search API. Search the web semanticall
 
 ## Why Go?
 
-The original project was written in TypeScript and required Bun to run. I kept running into segfaults when trying to use it inside a sandboxed harness, which was the final push to rewrite it. Go produces a single statically linked binary with no runtime dependencies — small enough to drop anywhere, and easy to cross-compile for Linux, macOS, and Windows from one machine (`task compile:all`). Honestly, I'm also just biased — Go is my favorite way to build CLIs.
+The original required Bun and kept segfaulting inside a sandboxed harness — that was enough. Go gives you a tiny static binary you can cross-compile for any platform with one command (`task compile:all`), no runtime babysitting required. I'm also just biased: Go is my favorite way to write a CLI.
 
 ## What is it?
 
