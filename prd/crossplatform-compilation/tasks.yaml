@@ -1,0 +1,18 @@
+tasks:
+  - key: audit-targets
+    description: Decide final platform target list (musl vs Windows vs both) and document naming conventions
+    details: ./audit-targets.md
+    status: done
+    depends: []
+
+  - key: update-taskfile
+    description: Update compile:all in Taskfile.yml to match the agreed target list
+    details: ./update-taskfile.md
+    status: done
+    depends: [audit-targets]
+
+  - key: update-release-workflow
+    description: Update release.yml matrix to match the agreed target list and add checksum generation
+    details: ./update-release-workflow.md
+    status: done
+    depends: [audit-targets]
