@@ -1,4 +1,4 @@
-.PHONY: build install clean
+.PHONY: build install clean lint test
 
 build:
 	go build -o build/exacli ./cmd/exacli
@@ -8,3 +8,10 @@ install: build
 
 clean:
 	rm -rf build/ result
+
+lint:
+	go vet ./...
+	golangci-lint run
+
+test:
+	go test ./...
