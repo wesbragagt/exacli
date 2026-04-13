@@ -2,7 +2,7 @@
 
 A Go CLI for the [Exa AI](https://exa.ai) search API. Search the web semantically, extract content from URLs, get AI-powered answers with citations, and conduct automated research — all from your terminal. Statically linked, no external package dependencies.
 
-> **Attribution:** Based on [exa-cli](https://github.com/sandiiarov/exa-cli) by Alex Sandiiarov. Now maintained by [wesbragagt](https://github.com/wesbragagt).
+> **Attribution:** Based on [exacli](https://github.com/SoftwareStartups/exacli).
 
 ## Why Go?
 
@@ -10,7 +10,7 @@ The original required Bun and kept segfaulting inside a sandboxed harness — th
 
 ## What is it?
 
-`exacli` is a command-line tool that communicates with the Exa AI search API. It can be used standalone or through Claude Code to:
+`exacli` is a command-line tool that communicates with the Exa AI search API. It can be used standalone or through an agent harness like Claude Code to:
 
 - Search the web using semantic understanding
 - Search code — get merged snippets from GitHub, Stack Overflow, and official docs in one shot
