@@ -4,6 +4,10 @@ A Go CLI for the [Exa AI](https://exa.ai) search API. Search the web semanticall
 
 > **Attribution:** Based on [exacli](https://github.com/SoftwareStartups/exacli).
 
+## Demo
+
+![exacli demo](./assets/demo-exacli.gif)
+
 ## Quick Start
 
 **Have Nix?**
