@@ -1,23 +1,48 @@
 # Exacli
 
-A Go CLI for the [Exa AI](https://exa.ai) search API. Search the web semantically, extract content from URLs, get AI-powered answers with citations, and conduct automated research — all from your terminal. Statically linked, no external package dependencies.
+A Go CLI for the [Exa AI](https://exa.ai) search API. Search the web semantically, extract content from URLs, get AI-powered answers with citations, and conduct automated research — all from your terminal. Statically linked, no external package dependencies. API key stored in your OS keychain (macOS Keychain, GNOME Keyring, KWallet).
 
 > **Attribution:** Based on [exacli](https://github.com/SoftwareStartups/exacli).
 
+## Demo
+
+![exacli demo](./assets/demo-exacli.gif)
+
+## Quick Start
+
+**Have Nix?**
+
+```bash
+git clone https://github.com/wesbragagt/exacli.git
+cd exacli
+nix build . -o build/nix
+cp build/nix/bin/exacli ~/.local/bin/
+exacli --version
+```
+
+**Have Go 1.25+?**
+
+```bash
+git clone https://github.com/wesbragagt/exacli.git
+cd exacli
+make install
+exacli --version
+```
+
+Then authenticate and search:
+
+```bash
+exacli login                          # store API key in OS keychain
+exacli search "latest AI news"
+```
+
+Get your key at [https://dashboard.exa.ai/api-keys](https://dashboard.exa.ai/api-keys).
+
+---
+
 ## Why Go?
 
-The original required Bun and kept segfaulting inside a sandboxed harness — that was enough. Go gives you a tiny static binary you can cross-compile for any platform with one command (`task compile:all`), no runtime babysitting required. I'm also just biased: Go is my favorite way to write a CLI.
-
-## What is it?
-
-`exacli` is a command-line tool that communicates with the Exa AI search API. It can be used standalone or through an agent harness like Claude Code to:
-
-- Search the web using semantic understanding
-- Search code — get merged snippets from GitHub, Stack Overflow, and official docs in one shot
-- Extract full text, highlights, and summaries from URLs
-- Get AI-generated answers with source citations
-- Find pages similar to any URL
-- Conduct automated deep research tasks
+The original required Bun and kept segfaulting inside a sandboxed harness — that was enough. Go gives you a tiny static binary you can cross-compile for any platform with one command (`make compile-all`), no runtime babysitting required. I'm also just biased: Go is my favorite way to write a CLI.
 
 ## Installation
 
@@ -35,50 +60,9 @@ Or install it into your profile:
 nix profile install github:wesbragagt/exacli
 ```
 
-### From Source
-
-The recommended way to set up the development environment is with [Nix](https://nixos.org), which provides Go, Task, and all other dependencies automatically. If you don't have Nix, install it with the [Determinate Nix Installer](https://github.com/DeterminateSystems/nix-installer):
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
-```
-
-Then clone the repo and let Nix set up the environment:
-
-```bash
-git clone https://github.com/wesbragagt/exacli.git
-cd exacli
-nix develop        # drops you into a shell with Go 1.25, Task, and all tools ready
-go mod download
-task build
-sudo cp build/exacli /usr/local/bin/
-```
-
-If you use [direnv](https://direnv.net), the included `.envrc` activates the Nix environment automatically when you `cd` into the repo:
-
-```bash
-direnv allow
-```
-
-**Without Nix:** Install the following tools manually, then follow the steps below.
-
-| Tool | Version | Install |
-|------|---------|---------|
-| [Go](https://go.dev/dl/) | 1.25+ | `brew install go` (macOS) or download from go.dev |
-| [Task](https://taskfile.dev/installation/) | any | `brew install go-task` (macOS) or `sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d` |
-| [Git](https://git-scm.com) | any | pre-installed on most systems |
-
-```bash
-git clone https://github.com/wesbragagt/exacli.git
-cd exacli
-go mod download
-task build
-sudo cp build/exacli /usr/local/bin/
-```
-
 ## Use with AI Assistants
 
-Exacli ships with pre-built skill files under `guides/` that let AI coding assistants invoke exacli commands on your behalf. Copy the relevant directory to your project, then make sure `EXA_API_KEY` is set — no edits needed.
+Exacli ships with pre-built skill files under `guides/` that let AI coding assistants invoke exacli commands on your behalf. Copy the relevant directory to your project — no edits needed. Make sure you've run `exacli login` first to store your API key in the OS keychain.
 
 ### Claude Code
 
@@ -96,28 +80,6 @@ This places the skill at `.claude/skills/exacli/SKILL.md`, which Claude Code dis
 | **Cursor** | `SKILL.md` | `.cursor/rules/exacli.mdc` (or append to `.cursorrules`) |
 
 The YAML frontmatter (`name`, `description`) at the top of `SKILL.md` is used by tools that support it and safely ignored by those that don't.
-
-> **Note:** Configure your API key in the environment (`EXA_API_KEY`) before asking your assistant to use exacli. See [Configuration](#configuration) below.
-
-## Configuration
-
-### API Key
-
-Store it securely in your OS keychain:
-
-```bash
-exacli login
-```
-
-Or pass it with each command:
-
-```bash
-exacli search "AI startups" --api-key "your-api-key-here"
-```
-
-Get your API key at [https://dashboard.exa.ai/api-keys](https://dashboard.exa.ai/api-keys)
-
-**Resolution order:** `--api-key` flag → `EXA_API_KEY` env var → OS keychain
 
 ## Commands
 
@@ -220,7 +182,7 @@ exacli logout
 
 | Flag | Description |
 |------|-------------|
-| `--api-key <key>` | Exa API key (overrides EXA_API_KEY env var and keychain) |
+| `--api-key <key>` | Exa API key (overrides keychain) |
 | `--json` | Output raw JSON instead of formatted markdown |
 | `--toon` | Output compact TOON format |
 | `--version` | Show version information |
@@ -255,19 +217,12 @@ Measured on a 10-result metadata-only search (no `--text`, `--highlights`, `--su
 
 ## Development
 
-Prerequisites: [Go 1.21+](https://go.dev/dl/) and [Task](https://taskfile.dev)
+Prerequisites: [Go 1.25+](https://go.dev/dl/)
 
 ```bash
-go mod download                      # Download dependencies
-task build                           # Build binary to build/exacli
-task lint                            # go vet ./...
-task test                            # Run tests
-task check                           # Lint + tests
-task ci                              # Full CI: clean -> check -> build
-task compile                         # CGO_ENABLED=0 binary for current platform -> dist/exacli
-task compile:all                     # Binaries for all 8 platforms -> dist/
-task compile:native                  # Platform-suffixed binary -> dist/exacli-<os>-<arch>
-task clean                           # Remove build/ and dist/
+make build        # build/exacli
+make install      # build + cp ~/.local/bin/
+make clean        # remove build/
 ```
 
 ## License

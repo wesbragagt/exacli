@@ -55,10 +55,10 @@ jobs:
           restore-prefixes-first-match: nix-${{ runner.os }}-
 
       - name: Lint
-        run: nix develop --command task lint
+        run: nix develop --command make lint
 
       - name: Test
-        run: nix develop --command task test
+        run: nix develop --command make test
 
   build:
     name: Build
@@ -81,4 +81,4 @@ jobs:
           restore-prefixes-first-match: nix-${{ runner.os }}-
 
       - name: Build
-        run: nix develop --command task build
+        run: nix develop --command make build
