@@ -84,7 +84,7 @@ var answerCmd = &cobra.Command{
 
 			err := c.StreamAnswer(context.Background(), query, opts, func(chunk client.AnswerChunk) {
 				if chunk.Content != "" {
-					os.Stdout.WriteString(chunk.Content)
+					_, _ = os.Stdout.WriteString(chunk.Content)
 				}
 				dedupCitations(&citations, chunk.Citations)
 			})
