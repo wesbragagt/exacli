@@ -10,7 +10,7 @@ description: Exa AI search API via CLI. Activate when user wants to search the w
 1. Match output format to context: use default for metadata-only results, `--toon` when fetching content, `--json` only when piping to `jq`
 2. User must have setup `exacli login` to store in OS keychain
 3. Use `--text` to include full content, `--highlights` for snippets
-4. Use `--type deep`/`deep-lite`/`deep-reasoning` on `search` for multi-step research with synthesis; it's synchronous, no polling needed
+4. Use `--type deep`/`deep-lite`/`deep-reasoning` and `--output-schema` on `search` for multi-step research with synthesis; it is synchronous and needs no polling
 
 ## Command Selection
 
@@ -21,7 +21,7 @@ Pick the right command first — wrong command = wrong output:
 | Find code examples / implementations | `exacli code` |
 | Web search with content | `exacli search --text` or `--highlights` |
 | Get a synthesized answer with citations | `exacli answer` |
-| Deep multi-step research report | `exacli search --type deep-reasoning --system-prompt "..."` |
+| Deep multi-step research report | `exacli search --type deep-reasoning --output-schema '{"type":"text","description":"..."}'` |
 | Fetch specific URL content | `exacli contents <url>` |
 | Find pages similar to a URL | `exacli similar <url>` |
 
@@ -82,8 +82,8 @@ exacli search "query" [options]
 | `--start-date <date>` | Start date (ISO format) |
 | `--end-date <date>` | End date (ISO format) |
 | `--autoprompt` | Use autoprompt to enhance query |
-| `--output-schema <json\|path>` | JSON schema for structured synthesis output (deep modes) |
-| `--system-prompt <text>` | System prompt guiding synthesis output (deep modes) |
+| `--output-schema <json\|path>` | Required to return structured synthesis output |
+| `--system-prompt <text>` | Guide deep-search planning and synthesis |
 
 ### contents
 
@@ -146,7 +146,7 @@ exacli logout   # remove API key from OS keychain
 | `deep` | Comprehensive multi-step research with synthesis |
 | `deep-reasoning` | Enhanced reasoning for harder analysis tasks, ~12-40s latency |
 
-Pair a deep type with `--system-prompt` or `--output-schema` to shape the synthesized answer, returned in `output.content` on the response.
+Pair a deep type with `--output-schema` to receive synthesized `output.content`. Use `--system-prompt` to guide the result.
 
 ## Common Patterns
 
@@ -175,6 +175,6 @@ exacli similar "https://openai.com/research" --exclude-source-domain
 # AI-powered answers
 exacli answer "What is quantum computing?" --stream
 
-# Deep multi-step research with synthesis (no polling needed)
-exacli search "Latest AI developments" --type deep-reasoning --system-prompt "Summarize key developments"
+# Deep multi-step research with synthesized output (no polling needed)
+exacli search "Latest AI developments" --type deep-reasoning --output-schema '{"type":"text","description":"Summarize key developments"}'
 ```

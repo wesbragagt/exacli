@@ -113,12 +113,12 @@ exacli search "latest AI developments"
 exacli search "machine learning papers" --type deep --text --highlights
 exacli search "startup funding" --category news --start-date 2024-01-01
 exacli search "AI research" --include-domains "arxiv.org,openai.com"
-exacli search "trends in quantum computing" --type deep-reasoning --system-prompt "Summarize key trends"
+exacli search "trends in quantum computing" --type deep-reasoning --output-schema '{"type":"text","description":"Summarize key trends"}'
 ```
 
 **Options:** `--num-results <n>`, `--type <auto|neural|keyword|hybrid|fast|instant|deep|deep-lite|deep-reasoning>`, `--text`, `--highlights`, `--summary`, `--category <category>`, `--include-domains <list>`, `--exclude-domains <list>`, `--start-date <date>`, `--end-date <date>`, `--autoprompt`, `--output-schema <json|path>`, `--system-prompt <text>`
 
-Use `--type deep`, `deep-lite`, or `deep-reasoning` for multi-step research with synthesis, combined with `--output-schema` or `--system-prompt` to shape the synthesized answer (available in `resp.output.content`).
+Use `--output-schema` to receive synthesized `output.content`. Use `--system-prompt` to guide synthesis and deep-search planning.
 
 ### `contents <url...>`
 
