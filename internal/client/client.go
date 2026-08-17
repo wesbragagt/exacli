@@ -144,12 +144,9 @@ type SearchResponse struct {
 	Output      *SearchOutput  `json:"output"`
 }
 
-// SearchOutput contains the synthesized answer from a deep-mode search
-// (type: deep, deep-lite, or deep-reasoning) when outputSchema or
-// systemPrompt is provided.
+// SearchOutput contains the synthesized answer from a search with an output schema.
 type SearchOutput struct {
-	Parsed  any    `json:"parsed"`
-	Content string `json:"content"`
+	Content any `json:"content"`
 }
 
 // CostDollars represents the cost of an API call.

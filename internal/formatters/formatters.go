@@ -36,10 +36,12 @@ func FormatSearchResults(resp *client.SearchResponse, asJSON, asToon bool) strin
 	fmt.Fprintf(&b, "Cost: $%.*f\n", costDecimals, resp.CostDollars.Total)
 	b.WriteString("\n")
 
-	if resp.Output != nil && resp.Output.Content != "" {
-		b.WriteString("## Output\n\n")
-		b.WriteString(resp.Output.Content)
-		b.WriteString("\n\n")
+	if resp.Output != nil {
+		if output := formatOutputContent(resp.Output.Content); output != "" {
+			b.WriteString("## Output\n\n")
+			b.WriteString(output)
+			b.WriteString("\n\n")
+		}
 	}
 
 	for i, r := range resp.Results {
@@ -90,6 +92,21 @@ func FormatSearchResults(resp *client.SearchResponse, asJSON, asToon bool) strin
 	return b.String()
 }
 
+func formatOutputContent(content any) string {
+	switch value := content.(type) {
+	case nil:
+		return ""
+	case string:
+		return value
+	default:
+		data, err := json.MarshalIndent(value, "", "  ")
+		if err != nil {
+			return ""
+		}
+		return string(data)
+	}
+}
+
 // ---------------------------------------------------------------------------
 // FormatAnswerResponse formats an AnswerResponse as markdown, JSON, or TOON.
 // ---------------------------------------------------------------------------
@@ -124,7 +141,6 @@ func FormatAnswerResponse(resp *client.AnswerResponse, asJSON, asToon bool) stri
 
 	return b.String()
 }
-
 
 // ---------------------------------------------------------------------------
 // FormatCodeContextResult formats a CodeContextResponse as markdown, JSON, or TOON.
