@@ -16,10 +16,6 @@ var validAnswerModels = map[string]bool{
 	"exa": true, "exa-pro": true,
 }
 
-var validResearchModels = map[string]bool{
-	"fast": true, "regular": true, "pro": true,
-}
-
 // ParseNumber parses a string as an integer. Returns 0, false if invalid.
 func ParseNumber(s string) (int, bool) {
 	s = strings.TrimSpace(s)
@@ -63,9 +59,4 @@ func IsValidSearchType(s string) bool {
 // IsValidAnswerModel returns true if s is a recognized answer model.
 func IsValidAnswerModel(s string) bool {
 	return validAnswerModels[s]
-}
-
-// IsValidResearchModel returns true if s is a recognized research model.
-func IsValidResearchModel(s string) bool {
-	return validResearchModels[s]
 }

@@ -126,25 +126,3 @@ func TestIsValidAnswerModel(t *testing.T) {
 	}
 }
 
-func TestIsValidResearchModel(t *testing.T) {
-	cases := []struct {
-		name  string
-		input string
-		want  bool
-	}{
-		{"fast", "fast", true},
-		{"regular", "regular", true},
-		{"pro", "pro", true},
-		{"slow", "slow", false},
-		{"empty", "", false},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			got := IsValidResearchModel(tc.input)
-			if got != tc.want {
-				t.Errorf("IsValidResearchModel(%q) = %t, want %t", tc.input, got, tc.want)
-			}
-		})
-	}
-}

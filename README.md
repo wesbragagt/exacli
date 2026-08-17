@@ -1,6 +1,6 @@
 # Exacli
 
-A Go CLI for the [Exa AI](https://exa.ai) search API. Search the web semantically, extract content from URLs, get AI-powered answers with citations, and conduct automated research — all from your terminal. Statically linked, no external package dependencies. API key stored in your OS keychain (macOS Keychain, GNOME Keyring, KWallet).
+A Go CLI for the [Exa AI](https://exa.ai) search API. Search the web semantically, extract content from URLs, get AI-powered answers with citations, and run deep multi-step research with `search --type deep` — all from your terminal. Statically linked, no external package dependencies. API key stored in your OS keychain (macOS Keychain, GNOME Keyring, KWallet).
 
 > **Attribution:** Based on [exacli](https://github.com/SoftwareStartups/exacli).
 
@@ -113,9 +113,12 @@ exacli search "latest AI developments"
 exacli search "machine learning papers" --type deep --text --highlights
 exacli search "startup funding" --category news --start-date 2024-01-01
 exacli search "AI research" --include-domains "arxiv.org,openai.com"
+exacli search "trends in quantum computing" --type deep-reasoning --system-prompt "Summarize key trends"
 ```
 
-**Options:** `--num-results <n>`, `--type <auto|fast|deep|instant>`, `--text`, `--highlights`, `--summary`, `--category <category>`, `--include-domains <list>`, `--exclude-domains <list>`, `--start-date <date>`, `--end-date <date>`, `--autoprompt`
+**Options:** `--num-results <n>`, `--type <auto|neural|keyword|hybrid|fast|instant|deep|deep-lite|deep-reasoning>`, `--text`, `--highlights`, `--summary`, `--category <category>`, `--include-domains <list>`, `--exclude-domains <list>`, `--start-date <date>`, `--end-date <date>`, `--autoprompt`, `--output-schema <json|path>`, `--system-prompt <text>`
+
+Use `--type deep`, `deep-lite`, or `deep-reasoning` for multi-step research with synthesis, combined with `--output-schema` or `--system-prompt` to shape the synthesized answer (available in `resp.output.content`).
 
 ### `contents <url...>`
 
@@ -150,24 +153,6 @@ exacli answer "Compare transformer architectures" --model exa-pro
 ```
 
 **Options:** `--text`, `--model <exa|exa-pro>`, `--stream`, `--system-prompt <text>`
-
-### `research <instructions>`
-
-Create automated research tasks.
-
-```bash
-exacli research "Latest SpaceX valuation" --poll
-exacli research "CRISPR applications" --model pro --poll --timeout 300000
-```
-
-**Options:** `--model <fast|regular|pro>`, `--poll`, `--poll-interval <ms>`, `--timeout <ms>`
-
-### `research-status <id>` / `research-list`
-
-```bash
-exacli research-status "task-id"
-exacli research-list --limit 10
-```
 
 ### `login` / `logout`
 

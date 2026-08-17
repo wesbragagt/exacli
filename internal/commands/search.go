@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -39,6 +40,8 @@ var searchCmd = &cobra.Command{
 		startDate, _ := cmd.Flags().GetString("start-date")
 		endDate, _ := cmd.Flags().GetString("end-date")
 		autoprompt, _ := cmd.Flags().GetBool("autoprompt")
+		outputSchema, _ := cmd.Flags().GetString("output-schema")
+		systemPrompt, _ := cmd.Flags().GetString("system-prompt")
 
 		// Validate type
 		if searchType != "" && !validSearchTypes[searchType] {
@@ -65,6 +68,19 @@ var searchCmd = &cobra.Command{
 			}
 		}
 
+		// Parse --output-schema (inline JSON string, or path to a JSON file)
+		var schema any
+		if outputSchema != "" {
+			data := []byte(outputSchema)
+			if fileData, err := os.ReadFile(outputSchema); err == nil {
+				data = fileData
+			}
+			if err := json.Unmarshal(data, &schema); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: invalid --output-schema: %v\n", err)
+				os.Exit(1)
+			}
+		}
+
 		// Resolve API key
 		apiKey, err := ResolveAPIKey(cmd)
 		if err != nil {
@@ -86,6 +102,8 @@ var searchCmd = &cobra.Command{
 			Text:           text,
 			Highlights:     highlights,
 			Summary:        summary,
+			OutputSchema:   schema,
+			SystemPrompt:   systemPrompt,
 		}
 
 		resp, err := c.Search(query, opts)
@@ -111,6 +129,8 @@ func init() {
 	searchCmd.Flags().String("start-date", "", "Start published date (ISO format)")
 	searchCmd.Flags().String("end-date", "", "End published date (ISO format)")
 	searchCmd.Flags().Bool("autoprompt", false, "Enable Exa autoprompt")
+	searchCmd.Flags().String("output-schema", "", "JSON schema (inline or file path) for structured synthesis output, used with --type deep/deep-lite/deep-reasoning")
+	searchCmd.Flags().String("system-prompt", "", "System prompt guiding synthesis output, used with --type deep/deep-lite/deep-reasoning")
 
 	rootCmd.AddCommand(searchCmd)
 }

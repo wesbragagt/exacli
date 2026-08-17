@@ -33,9 +33,6 @@ Commands:
   contents   Get content from URLs
   similar    Find similar pages to a URL
   answer     Get an AI-powered answer to a query
-  research   Start a deep research task
-  research-status  Get status of a research task
-  research-list    List research tasks
   login      Store your Exa API key in the OS keychain
   logout     Remove your Exa API key from the OS keychain
 
@@ -49,7 +46,7 @@ Examples:
   exacli search "latest AI news" --num-results 5
   exacli contents https://example.com --text
   exacli answer "What is the capital of France?"
-  exacli research "trends in quantum computing" --poll
+  exacli search "trends in quantum computing" --type deep --system-prompt "Summarize key trends"
   exacli login`
 
 func init() {

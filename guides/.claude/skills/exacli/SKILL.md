@@ -1,6 +1,6 @@
 ---
 name: exacli
-description: Exa AI search API via CLI. Activate when user wants to search the web, find code examples, extract content from websites, get AI answers with sources, or perform automated research. Examples: "search for AI startups", "find rate limiter code in Go", "extract content from this URL", "research this topic", "find similar pages".
+description: Exa AI search API via CLI. Activate when user wants to search the web, find code examples, extract content from websites, get AI answers with sources, or run deep multi-step research. Examples: "search for AI startups", "find rate limiter code in Go", "extract content from this URL", "research this topic", "find similar pages".
 ---
 
 # Exacli
@@ -10,7 +10,7 @@ description: Exa AI search API via CLI. Activate when user wants to search the w
 1. Match output format to context: use default for metadata-only results, `--toon` when fetching content, `--json` only when piping to `jq`
 2. User must have setup `exacli login` to store in OS keychain
 3. Use `--text` to include full content, `--highlights` for snippets
-4. Use `--poll` with research tasks to wait for results
+4. Use `--type deep`/`deep-lite`/`deep-reasoning` on `search` for multi-step research with synthesis; it's synchronous, no polling needed
 
 ## Command Selection
 
@@ -21,7 +21,7 @@ Pick the right command first — wrong command = wrong output:
 | Find code examples / implementations | `exacli code` |
 | Web search with content | `exacli search --text` or `--highlights` |
 | Get a synthesized answer with citations | `exacli answer` |
-| Deep multi-step research report | `exacli research --poll` (fall back to `exacli answer` on 404) |
+| Deep multi-step research report | `exacli search --type deep-reasoning --system-prompt "..."` |
 | Fetch specific URL content | `exacli contents <url>` |
 | Find pages similar to a URL | `exacli similar <url>` |
 
@@ -46,7 +46,7 @@ exacli search "query" --text --toon
 
 # Scripting: --json when you need jq field extraction
 exacli search "query" --json | jq '.results[] | {title, url}'
-exacli research-status "task-id" --json | jq '{status, output}'
+exacli search "query" --type deep --json | jq '{status, output}'
 ```
 
 ## Commands
@@ -72,7 +72,7 @@ exacli search "query" [options]
 | Option | Description |
 |--------|-------------|
 | `--num-results <n>` | Number of results (default: 10) |
-| `--type <auto\|fast\|deep\|instant>` | Search type |
+| `--type <auto\|neural\|keyword\|hybrid\|fast\|instant\|deep\|deep-lite\|deep-reasoning>` | Search type |
 | `--text` | Include full text content |
 | `--highlights` | Include relevant highlights |
 | `--summary` | Include AI-generated summary |
@@ -82,6 +82,8 @@ exacli search "query" [options]
 | `--start-date <date>` | Start date (ISO format) |
 | `--end-date <date>` | End date (ISO format) |
 | `--autoprompt` | Use autoprompt to enhance query |
+| `--output-schema <json\|path>` | JSON schema for structured synthesis output (deep modes) |
+| `--system-prompt <text>` | System prompt guiding synthesis output (deep modes) |
 
 ### contents
 
@@ -113,23 +115,6 @@ exacli answer "query" [options]
 
 Options: `--text`, `--model <exa|exa-pro>`, `--stream`, `--system-prompt <text>`
 
-### research
-
-Create automated research tasks. If this returns a 404, fall back to `exacli answer`.
-
-```bash
-exacli research "instructions" [options]
-```
-
-Options: `--model <fast|regular|pro>`, `--poll`, `--poll-interval <ms>`, `--timeout <ms>`
-
-### research-status / research-list
-
-```bash
-exacli research-status <task-id>
-exacli research-list [--limit <n>] [--cursor <token>]
-```
-
 ### login / logout
 
 ```bash
@@ -156,16 +141,12 @@ exacli logout   # remove API key from OS keychain
 |------|-------------|
 | `auto` | Automatically chosen (default) |
 | `fast` | Quick results |
-| `deep` | Thorough, best for research |
 | `instant` | Lowest latency |
+| `deep-lite` | Multi-step research with synthesis, ~4s latency |
+| `deep` | Comprehensive multi-step research with synthesis |
+| `deep-reasoning` | Enhanced reasoning for harder analysis tasks, ~12-40s latency |
 
-## Research Models
-
-| Model | Description |
-|-------|-------------|
-| `fast` | Quick facts |
-| `regular` | Balanced (default) |
-| `pro` | Highest quality |
+Pair a deep type with `--system-prompt` or `--output-schema` to shape the synthesized answer, returned in `output.content` on the response.
 
 ## Common Patterns
 
@@ -183,7 +164,7 @@ exacli search "transformer architecture" --type deep --highlights --toon
 exacli search "startup funding" --category news --start-date 2024-01-01
 
 # Domain-specific search
-exacli search "research" --include-domains "arxiv.org,openai.com"
+exacli search "AI research papers" --include-domains "arxiv.org,openai.com"
 
 # Extract content from URLs
 exacli contents "https://example.com/article" --text --toon
@@ -194,14 +175,6 @@ exacli similar "https://openai.com/research" --exclude-source-domain
 # AI-powered answers
 exacli answer "What is quantum computing?" --stream
 
-# Research with polling (falls back to answer on 404)
-exacli research "Latest AI developments" --poll
-# fallback:
-exacli answer "Latest AI developments" --text
-
-# Check research status
-exacli research-status "task-id" --json | jq '{status, output}'
-
-# List research tasks
-exacli research-list --limit 10 --json | jq '.data[] | {id, status}'
+# Deep multi-step research with synthesis (no polling needed)
+exacli search "Latest AI developments" --type deep-reasoning --system-prompt "Summarize key developments"
 ```

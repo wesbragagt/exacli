@@ -46,6 +46,8 @@ type searchRequest struct {
 	Text               bool     `json:"text,omitempty"`
 	Highlights         bool     `json:"highlights,omitempty"`
 	Summary            bool     `json:"summary,omitempty"`
+	OutputSchema       any      `json:"outputSchema,omitempty"`
+	SystemPrompt       string   `json:"systemPrompt,omitempty"`
 }
 
 type findSimilarRequest struct {
@@ -74,11 +76,6 @@ type answerRequest struct {
 	Stream       bool   `json:"stream,omitempty"`
 }
 
-type researchCreateRequest struct {
-	Instructions string `json:"instructions"`
-	Model        string `json:"model,omitempty"`
-}
-
 type codeContextRequest struct {
 	Query     string `json:"query"`
 	TokensNum any    `json:"tokensNum,omitempty"`
@@ -101,6 +98,8 @@ type SearchOptions struct {
 	Text           bool
 	Highlights     bool
 	Summary        bool
+	OutputSchema   any
+	SystemPrompt   string
 }
 
 // FindSimilarOptions configures a FindSimilar request.
@@ -133,17 +132,6 @@ type CodeContextOptions struct {
 	TokensNum any // "dynamic" | 1000 | 5000 | 50000
 }
 
-// ResearchCreateOptions configures a ResearchCreate request.
-type ResearchCreateOptions struct {
-	Model string // "exa-research-fast", "exa-research", "exa-research-pro"
-}
-
-// ResearchListOptions configures a ResearchList request.
-type ResearchListOptions struct {
-	Limit  int
-	Cursor string
-}
-
 // ---------------------------------------------------------------------------
 // Response types (exported)
 // ---------------------------------------------------------------------------
@@ -153,6 +141,15 @@ type SearchResponse struct {
 	RequestID   string         `json:"requestId"`
 	CostDollars CostDollars    `json:"costDollars"`
 	Results     []SearchResult `json:"results"`
+	Output      *SearchOutput  `json:"output"`
+}
+
+// SearchOutput contains the synthesized answer from a deep-mode search
+// (type: deep, deep-lite, or deep-reasoning) when outputSchema or
+// systemPrompt is provided.
+type SearchOutput struct {
+	Parsed  any    `json:"parsed"`
+	Content string `json:"content"`
 }
 
 // CostDollars represents the cost of an API call.
@@ -194,50 +191,11 @@ type Citation struct {
 	Title string `json:"title"`
 }
 
-// ResearchTask represents an async research task.
-type ResearchTask struct {
-	ResearchID   string              `json:"researchId"`
-	Status       string              `json:"status"`
-	Instructions string              `json:"instructions"`
-	CostDollars  ResearchCostDollars `json:"costDollars"`
-	Output       *ResearchOutput     `json:"output"`
-	Citations    []Citation          `json:"citations"`
-	Events       []ResearchEvent     `json:"events"`
-}
-
-// ResearchCostDollars contains cost breakdown for a research task.
-type ResearchCostDollars struct {
-	Total           float64 `json:"total"`
-	NumSearches     int     `json:"numSearches"`
-	NumPages        int     `json:"numPages"`
-	ReasoningTokens int     `json:"reasoningTokens"`
-}
-
-// ResearchOutput contains the output of a completed research task.
-type ResearchOutput struct {
-	Parsed  any    `json:"parsed"`
-	Content string `json:"content"`
-}
-
-// ResearchEvent represents an event in a research task's lifecycle.
-type ResearchEvent struct {
-	CreatedAt int64  `json:"createdAt"`
-	EventType string `json:"eventType"`
-	Message   string `json:"message"`
-}
-
 // CodeContextResponse is returned by CodeContext.
 type CodeContextResponse struct {
 	RequestID string `json:"requestId"`
 	Query     string `json:"query"`
 	Response  string `json:"response"`
-}
-
-// ResearchListResponse is returned by ResearchList.
-type ResearchListResponse struct {
-	Data       []ResearchTask `json:"data"`
-	HasMore    bool           `json:"hasMore"`
-	NextCursor string         `json:"nextCursor"`
 }
 
 // ---------------------------------------------------------------------------
@@ -320,6 +278,8 @@ func (c *Client) Search(query string, opts SearchOptions) (*SearchResponse, erro
 		Text:               opts.Text,
 		Highlights:         opts.Highlights,
 		Summary:            opts.Summary,
+		OutputSchema:       opts.OutputSchema,
+		SystemPrompt:       opts.SystemPrompt,
 	}
 
 	var resp SearchResponse
@@ -453,52 +413,6 @@ func (c *Client) StreamAnswer(ctx context.Context, query string, opts AnswerOpti
 	return nil
 }
 
-// ResearchCreate starts a new research task.
-func (c *Client) ResearchCreate(instructions string, opts ResearchCreateOptions) (*ResearchTask, error) {
-	body := researchCreateRequest{
-		Instructions: instructions,
-		Model:        opts.Model,
-	}
-
-	var resp ResearchTask
-	if err := c.post("/research", body, &resp); err != nil {
-		return nil, err
-	}
-	return &resp, nil
-}
-
-// ResearchGet retrieves the current state of a research task. If events is
-// true the response includes the task's event log.
-func (c *Client) ResearchGet(id string, events bool) (*ResearchTask, error) {
-	params := url.Values{}
-	if events {
-		params.Set("events", "true")
-	}
-
-	var resp ResearchTask
-	if err := c.get("/research/"+id, params, &resp); err != nil {
-		return nil, err
-	}
-	return &resp, nil
-}
-
-// ResearchList lists research tasks with optional pagination.
-func (c *Client) ResearchList(opts ResearchListOptions) (*ResearchListResponse, error) {
-	params := url.Values{}
-	if opts.Limit > 0 {
-		params.Set("limit", fmt.Sprintf("%d", opts.Limit))
-	}
-	if opts.Cursor != "" {
-		params.Set("cursor", opts.Cursor)
-	}
-
-	var resp ResearchListResponse
-	if err := c.get("/research", params, &resp); err != nil {
-		return nil, err
-	}
-	return &resp, nil
-}
-
 // CodeContext retrieves code context for the given query using the Exa Code API.
 func (c *Client) CodeContext(query string, opts CodeContextOptions) (*CodeContextResponse, error) {
 	body := codeContextRequest{
@@ -511,38 +425,4 @@ func (c *Client) CodeContext(query string, opts CodeContextOptions) (*CodeContex
 		return nil, err
 	}
 	return &resp, nil
-}
-
-// ResearchPollUntilFinished polls a research task until it reaches a terminal
-// state or the timeout elapses.
-//
-// pollIntervalMs defaults to 1000 if zero. timeoutMs defaults to 300000 (5
-// minutes) if zero.
-func (c *Client) ResearchPollUntilFinished(id string, pollIntervalMs, timeoutMs int) (*ResearchTask, error) {
-	if pollIntervalMs <= 0 {
-		pollIntervalMs = 1000
-	}
-	if timeoutMs <= 0 {
-		timeoutMs = 300000
-	}
-
-	interval := time.Duration(pollIntervalMs) * time.Millisecond
-	deadline := time.Now().Add(time.Duration(timeoutMs) * time.Millisecond)
-
-	for {
-		task, err := c.ResearchGet(id, true)
-		if err != nil {
-			return nil, fmt.Errorf("polling research task %s: %w", id, err)
-		}
-
-		if task.Status != "processing" {
-			return task, nil
-		}
-
-		if time.Now().After(deadline) {
-			return nil, fmt.Errorf("timeout waiting for research task %s after %dms", id, timeoutMs)
-		}
-
-		time.Sleep(interval)
-	}
 }

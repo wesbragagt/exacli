@@ -1,10 +1,10 @@
 # Exacli
 
-> A CLI tool for the Exa AI search API. Search the web semantically, extract content from URLs, get AI-powered answers with citations, and conduct automated research from your terminal.
+> A CLI tool for the Exa AI search API. Search the web semantically, extract content from URLs, get AI-powered answers with citations, and run deep multi-step research from your terminal.
 
 ## Overview
 
-Exacli is a command-line interface for the Exa AI search API. Written in Go with zero runtime dependencies. It provides commands for semantic web search, content extraction, AI-powered Q&A, and automated research tasks. Outputs formatted markdown by default with JSON and TOON format support for scripting.
+Exacli is a command-line interface for the Exa AI search API. Written in Go with zero runtime dependencies. It provides commands for semantic web search, content extraction, AI-powered Q&A, and deep research via `search --type deep`. Outputs formatted markdown by default with JSON and TOON format support for scripting.
 
 ## Installation
 
@@ -49,8 +49,8 @@ exacli answer "What is quantum computing?"
 # Find similar pages
 exacli similar "https://example.com/article"
 
-# Conduct automated research
-exacli research "Latest SpaceX valuation" --poll
+# Run deep multi-step research with synthesis
+exacli search "Latest SpaceX valuation" --type deep --system-prompt "Summarize the findings"
 ```
 
 ## Core Commands
@@ -64,7 +64,7 @@ exacli search "query" [options]
 
 **Options:**
 - `--num-results <n>`: Number of results (default: 10)
-- `--type <auto|fast|deep|instant>`: Search type
+- `--type <auto|neural|keyword|hybrid|fast|instant|deep|deep-lite|deep-reasoning>`: Search type
 - `--text`: Include full text content
 - `--highlights`: Include relevant highlights
 - `--summary`: Include AI-generated summary
@@ -74,8 +74,12 @@ exacli search "query" [options]
 - `--start-date <date>`: Start date (ISO format)
 - `--end-date <date>`: End date (ISO format)
 - `--autoprompt`: Use autoprompt to enhance query
+- `--output-schema <json|path>`: JSON schema for structured synthesis output (deep modes)
+- `--system-prompt <text>`: System prompt guiding synthesis output (deep modes)
 
 **Categories:** company, research paper, news, pdf, tweet, personal site, financial report, people
+
+Use `--type deep`, `deep-lite`, or `deep-reasoning` for multi-step research with synthesis. The synthesized answer is returned in `output.content` on the response.
 
 ### Contents
 Retrieve contents from specific URLs.
@@ -116,37 +120,6 @@ exacli answer "query" [options]
 - `--stream`: Stream response in real-time
 - `--system-prompt <text>`: Custom system prompt
 
-### Research
-Create automated research tasks.
-
-```bash
-exacli research "instructions" [options]
-```
-
-**Options:**
-- `--model <fast|regular|pro>`: Research model
-- `--poll`: Poll until completion
-- `--poll-interval <ms>`: Polling interval (default: 1000)
-- `--timeout <ms>`: Timeout (default: 600000)
-
-### Research Status
-Check research task status.
-
-```bash
-exacli research-status <task-id>
-```
-
-### Research List
-List all research tasks.
-
-```bash
-exacli research-list [options]
-```
-
-**Options:**
-- `--limit <n>`: Number of tasks
-- `--cursor <token>`: Pagination cursor
-
 ### Auth
 ```bash
 exacli login   # Store API key in OS keychain
@@ -167,7 +140,8 @@ exacli logout  # Remove API key from OS keychain
 exacli search "hottest AI startups 2024"
 exacli search "transformer architecture" --type deep --text --highlights
 exacli search "AI acquisitions" --category news --start-date 2024-01-01
-exacli search "research" --include-domains "arxiv.org,openai.com"
+exacli search "AI research papers" --include-domains "arxiv.org,openai.com"
+exacli search "SpaceX valuation and funding history" --type deep-reasoning --system-prompt "Summarize the findings"
 ```
 
 ### Content Extraction
@@ -181,13 +155,6 @@ exacli contents "https://example.com/1" "https://example.com/2" --highlights --s
 exacli answer "What is neural machine translation?"
 exacli answer "Explain large language models" --stream
 exacli answer "Explain recursion" --system-prompt "Explain like I'm 5"
-```
-
-### Research Workflow
-```bash
-exacli research "SpaceX valuation and funding history" --poll
-exacli research-status "task-id"
-exacli research-list --limit 10
 ```
 
 ## Development

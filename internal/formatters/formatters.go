@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/wesbragagt/exacli/internal/client"
 )
@@ -14,7 +13,6 @@ const (
 	costDecimals           = 4
 	scoreDecimals          = 3
 	highlightScoreDecimals = 2
-	instructionPreviewLen  = 60
 )
 
 // ---------------------------------------------------------------------------
@@ -37,6 +35,12 @@ func FormatSearchResults(resp *client.SearchResponse, asJSON, asToon bool) strin
 	}
 	fmt.Fprintf(&b, "Cost: $%.*f\n", costDecimals, resp.CostDollars.Total)
 	b.WriteString("\n")
+
+	if resp.Output != nil && resp.Output.Content != "" {
+		b.WriteString("## Output\n\n")
+		b.WriteString(resp.Output.Content)
+		b.WriteString("\n\n")
+	}
 
 	for i, r := range resp.Results {
 		fmt.Fprintf(&b, "## %d. %s\n\n", i+1, r.Title)
@@ -121,106 +125,6 @@ func FormatAnswerResponse(resp *client.AnswerResponse, asJSON, asToon bool) stri
 	return b.String()
 }
 
-// ---------------------------------------------------------------------------
-// FormatResearchTask formats a ResearchTask as markdown, JSON, or TOON.
-// ---------------------------------------------------------------------------
-
-func FormatResearchTask(task *client.ResearchTask, asJSON, asToon bool) string {
-	if asJSON {
-		return toJSON(task)
-	}
-	if asToon {
-		return toToon(task)
-	}
-
-	var b strings.Builder
-	b.WriteString("# Research Task\n\n")
-
-	if task.ResearchID != "" {
-		fmt.Fprintf(&b, "- **ID:** %s\n", task.ResearchID)
-	}
-	if task.Status != "" {
-		fmt.Fprintf(&b, "- **Status:** %s\n", task.Status)
-	}
-	if task.Instructions != "" {
-		fmt.Fprintf(&b, "- **Instructions:** %s\n", task.Instructions)
-	}
-
-	// Cost line with optional breakdown in parentheses.
-	costLine := fmt.Sprintf("$%.*f", costDecimals, task.CostDollars.Total)
-	if parts := researchCostParts(task.CostDollars); len(parts) > 0 {
-		costLine += " (" + strings.Join(parts, ", ") + ")"
-	}
-	fmt.Fprintf(&b, "- **Cost:** %s\n", costLine)
-
-	if task.Output != nil && task.Output.Content != "" {
-		b.WriteString("\n## Output\n\n")
-		b.WriteString(task.Output.Content)
-		b.WriteString("\n")
-	}
-
-	if len(task.Citations) > 0 {
-		b.WriteString("\n## Sources\n\n")
-		for i, c := range task.Citations {
-			fmt.Fprintf(&b, "%d. [%s](%s)\n", i+1, c.Title, c.URL)
-		}
-	}
-
-	if len(task.Events) > 0 {
-		b.WriteString("\n## Events\n\n")
-		for _, e := range task.Events {
-			ts := time.UnixMilli(e.CreatedAt).UTC().Format(time.RFC3339)
-			fmt.Fprintf(&b, "- [%s] %s: %s\n", ts, e.EventType, e.Message)
-		}
-	}
-
-	return b.String()
-}
-
-// researchCostParts builds the conditional breakdown parts for research costs.
-func researchCostParts(c client.ResearchCostDollars) []string {
-	var parts []string
-	if c.NumSearches > 0 {
-		parts = append(parts, fmt.Sprintf("%d searches", c.NumSearches))
-	}
-	if c.NumPages > 0 {
-		parts = append(parts, fmt.Sprintf("%d pages", c.NumPages))
-	}
-	if c.ReasoningTokens > 0 {
-		parts = append(parts, fmt.Sprintf("%d reasoning tokens", c.ReasoningTokens))
-	}
-	return parts
-}
-
-// ---------------------------------------------------------------------------
-// FormatResearchList formats a ResearchListResponse as markdown, JSON, or TOON.
-// ---------------------------------------------------------------------------
-
-func FormatResearchList(resp *client.ResearchListResponse, asJSON, asToon bool) string {
-	if asJSON {
-		return toJSON(resp)
-	}
-	if asToon {
-		return toToon(resp)
-	}
-
-	var b strings.Builder
-	b.WriteString("# Research Tasks\n\n")
-
-	for _, t := range resp.Data {
-		instr := t.Instructions
-		if len(instr) > instructionPreviewLen {
-			instr = instr[:instructionPreviewLen] + "..."
-		}
-		fmt.Fprintf(&b, "- %s: %s\n  %s\n\n", t.ResearchID, t.Status, instr)
-	}
-
-	if resp.HasMore && resp.NextCursor != "" {
-		fmt.Fprintf(&b, "More results available. Use --cursor %s to see more.\n", resp.NextCursor)
-	}
-
-	return b.String()
-}
 
 // ---------------------------------------------------------------------------
 // FormatCodeContextResult formats a CodeContextResponse as markdown, JSON, or TOON.
