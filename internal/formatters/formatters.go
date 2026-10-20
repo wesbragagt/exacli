@@ -85,6 +85,14 @@ func FormatSearchResults(resp *client.SearchResponse, asJSON, asToon bool) strin
 			b.WriteString(r.Summary)
 			b.WriteString("\n")
 		}
+		if len(r.Entities) > 0 {
+			data, err := json.MarshalIndent(r.Entities, "", "  ")
+			if err == nil {
+				b.WriteString("\n### Entities\n\n```json\n")
+				b.Write(data)
+				b.WriteString("\n```\n")
+			}
+		}
 
 		b.WriteString("\n---\n\n")
 	}

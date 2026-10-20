@@ -64,9 +64,10 @@ exacli search "query" [options]
 
 **Options:**
 - `--num-results <n>`: Number of results (default: 10)
-- `--type <auto|neural|keyword|hybrid|fast|instant|deep|deep-lite|deep-reasoning>`: Search type
+- `--type <auto|neural|keyword|hybrid|fast|instant|lite|deep|deep-lite|deep-reasoning>`: Search type; Lite uses cached content at low cost; fast/instant are legacy
 - `--text`: Include full text content
 - `--highlights`: Include relevant highlights
+- `--dynamic-highlights`: Use cross-result Dynamic Highlights (implies `--highlights`, including when `--highlights=false`)
 - `--summary`: Include AI-generated summary
 - `--category <category>`: Filter by category
 - `--include-domains <list>`: Comma-separated domains to include
@@ -80,6 +81,10 @@ exacli search "query" [options]
 **Categories:** company, research paper, news, pdf, tweet, personal site, financial report, people
 
 Use `--type deep`, `deep-lite`, or `deep-reasoning` for multi-step research with synthesis. The synthesized answer is returned in `output.content` on the response.
+
+Lite rejects enabled `--summary` and `--autoprompt`, and nonempty `--output-schema` and `--system-prompt`. Explicitly false booleans are allowed. The default search mode and existing type values are unchanged.
+
+Dynamic Highlights sends the required beta header only when explicitly requested. Structured entities returned by Exa remain complete in JSON `results[].entities` and the default markdown Entities JSON block. TOON includes non-null entity leaves under `results.<i>.entities.<j>`.
 
 ### Contents
 Retrieve contents from specific URLs.

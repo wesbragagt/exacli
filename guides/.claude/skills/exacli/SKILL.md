@@ -72,9 +72,10 @@ exacli search "query" [options]
 | Option | Description |
 |--------|-------------|
 | `--num-results <n>` | Number of results (default: 10) |
-| `--type <auto\|neural\|keyword\|hybrid\|fast\|instant\|deep\|deep-lite\|deep-reasoning>` | Search type |
+| `--type <auto\|neural\|keyword\|hybrid\|fast\|instant\|lite\|deep\|deep-lite\|deep-reasoning>` | Search type; default mode unchanged |
 | `--text` | Include full text content |
 | `--highlights` | Include relevant highlights |
+| `--dynamic-highlights` | Cross-result Dynamic Highlights; implies `--highlights`, even with `--highlights=false` |
 | `--summary` | Include AI-generated summary |
 | `--category <category>` | Filter by category |
 | `--include-domains <list>` | Comma-separated domains to include |
@@ -84,6 +85,10 @@ exacli search "query" [options]
 | `--autoprompt` | Use autoprompt to enhance query |
 | `--output-schema <json\|path>` | Required to return structured synthesis output |
 | `--system-prompt <text>` | Guide deep-search planning and synthesis |
+
+Lite uses cached content at low cost. It rejects enabled `--summary` and `--autoprompt`, and nonempty `--output-schema` and `--system-prompt`. Explicitly false booleans are allowed. Dynamic Highlights sends the required beta header only when requested.
+
+Returned entities retain complete objects in JSON `results[].entities` and the default markdown Entities JSON block. TOON includes non-null leaves under `results.<i>.entities.<j>`. Do not assume a fixed entity type or that every query returns entities.
 
 ### contents
 
@@ -140,8 +145,9 @@ exacli logout   # remove API key from OS keychain
 | Type | Description |
 |------|-------------|
 | `auto` | Automatically chosen (default) |
-| `fast` | Quick results |
-| `instant` | Lowest latency |
+| `lite` | Low-cost search using cached content |
+| `fast` | Legacy fast search; still accepted |
+| `instant` | Legacy low-latency search; still accepted |
 | `deep-lite` | Multi-step research with synthesis, ~4s latency |
 | `deep` | Comprehensive multi-step research with synthesis |
 | `deep-reasoning` | Enhanced reasoning for harder analysis tasks, ~12-40s latency |

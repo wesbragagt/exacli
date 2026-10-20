@@ -13,10 +13,9 @@ import (
 
 var validSearchTypes = map[string]bool{
 	"auto": true, "neural": true, "keyword": true, "hybrid": true,
-	"fast": true, "instant": true, "deep": true, "deep-lite": true,
+	"fast": true, "instant": true, "lite": true, "deep": true, "deep-lite": true,
 	"deep-reasoning": true,
 }
-
 var searchCmd = &cobra.Command{
 	Use:   "search <query>",
 	Short: "Search the web using Exa",
@@ -31,6 +30,7 @@ var searchCmd = &cobra.Command{
 		// Get search flags
 		numResults, _ := cmd.Flags().GetInt("num-results")
 		searchType, _ := cmd.Flags().GetString("type")
+		dynamicHighlights, _ := cmd.Flags().GetBool("dynamic-highlights")
 		text, _ := cmd.Flags().GetBool("text")
 		highlights, _ := cmd.Flags().GetBool("highlights")
 		summary, _ := cmd.Flags().GetBool("summary")
@@ -45,8 +45,26 @@ var searchCmd = &cobra.Command{
 
 		// Validate type
 		if searchType != "" && !validSearchTypes[searchType] {
-			fmt.Fprintf(os.Stderr, "Error: invalid --type %q. Valid types: auto, neural, keyword, hybrid, fast, instant, deep, deep-lite, deep-reasoning\n", searchType)
+			fmt.Fprintf(os.Stderr, "Error: invalid --type %q. Valid types: auto, neural, keyword, hybrid, fast, instant, lite, deep, deep-lite, deep-reasoning\n", searchType)
 			os.Exit(1)
+		}
+		if searchType == "lite" {
+			var unsupported []string
+			if summary {
+				unsupported = append(unsupported, "--summary")
+			}
+			if autoprompt {
+				unsupported = append(unsupported, "--autoprompt")
+			}
+			if outputSchema != "" {
+				unsupported = append(unsupported, "--output-schema")
+			}
+			if systemPrompt != "" {
+				unsupported = append(unsupported, "--system-prompt")
+			}
+			if len(unsupported) > 0 {
+				return fmt.Errorf("--type lite does not support %s", strings.Join(unsupported, ", "))
+			}
 		}
 
 		// Parse comma-separated domains
@@ -91,19 +109,20 @@ var searchCmd = &cobra.Command{
 		c := client.New(apiKey)
 
 		opts := client.SearchOptions{
-			NumResults:     numResults,
-			Type:           searchType,
-			IncludeDomains: inclDomains,
-			ExcludeDomains: exclDomains,
-			Category:       category,
-			StartDate:      startDate,
-			EndDate:        endDate,
-			UseAutoprompt:  autoprompt,
-			Text:           text,
-			Highlights:     highlights,
-			Summary:        summary,
-			OutputSchema:   schema,
-			SystemPrompt:   systemPrompt,
+			NumResults:        numResults,
+			Type:              searchType,
+			IncludeDomains:    inclDomains,
+			ExcludeDomains:    exclDomains,
+			Category:          category,
+			StartDate:         startDate,
+			EndDate:           endDate,
+			UseAutoprompt:     autoprompt,
+			Text:              text,
+			Highlights:        highlights,
+			DynamicHighlights: dynamicHighlights,
+			Summary:           summary,
+			OutputSchema:      schema,
+			SystemPrompt:      systemPrompt,
 		}
 
 		resp, err := c.Search(query, opts)
@@ -119,10 +138,11 @@ var searchCmd = &cobra.Command{
 
 func init() {
 	searchCmd.Flags().Int("num-results", 10, "Number of results to return")
-	searchCmd.Flags().String("type", "", "Search type (auto|neural|keyword|hybrid|fast|instant|deep|deep-lite|deep-reasoning)")
+	searchCmd.Flags().String("type", "", "Search type (auto|neural|keyword|hybrid|fast|instant|lite|deep|deep-lite|deep-reasoning; fast/instant are legacy, lite uses cached content at low cost)")
 	searchCmd.Flags().Bool("text", false, "Include full text content")
 	searchCmd.Flags().Bool("highlights", false, "Include highlights")
 	searchCmd.Flags().Bool("summary", false, "Include summary")
+	searchCmd.Flags().Bool("dynamic-highlights", false, "Use cross-result Dynamic Highlights (implies --highlights)")
 	searchCmd.Flags().String("category", "", "Category filter")
 	searchCmd.Flags().String("include-domains", "", "Comma-separated domains to include")
 	searchCmd.Flags().String("exclude-domains", "", "Comma-separated domains to exclude")

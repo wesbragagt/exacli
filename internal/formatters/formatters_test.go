@@ -32,6 +32,39 @@ func TestFormatSearchResults(t *testing.T) {
 			},
 		},
 	}
+	entityResponse := &client.SearchResponse{Results: []client.SearchResult{{
+		Title: "Place", Highlights: []string{"scoreless highlight"},
+		Entities: []json.RawMessage{json.RawMessage(`{"type":"unlisted-place-kind","version":1,"properties":{"address":{"street":"1 Main St"},"rating":4.7,"hours":["open"],"nullable":null,"extra":"kept"}}`)},
+	}}}
+	entityJSON := FormatSearchResults(entityResponse, true, false)
+	var decoded map[string]any
+	if err := json.Unmarshal([]byte(entityJSON), &decoded); err != nil {
+		t.Fatalf("decode formatted JSON: %v", err)
+	}
+	entity := decoded["results"].([]any)[0].(map[string]any)["entities"].([]any)[0].(map[string]any)
+	properties := entity["properties"].(map[string]any)
+	if entity["type"] != "unlisted-place-kind" || properties["rating"] != 4.7 || properties["address"].(map[string]any)["street"] != "1 Main St" || properties["nullable"] != nil || properties["extra"] != "kept" {
+		t.Fatalf("entity data lost: %#v", entity)
+	}
+	toon := FormatSearchResults(entityResponse, false, true)
+	if !strings.Contains(toon, "results.0.entities.0.properties.address.street: 1 Main St") || !strings.Contains(toon, "results.0.entities.0.properties.rating: 4.7") {
+		t.Fatalf("TOON lost entity leaves:\n%s", toon)
+	}
+	markdown := FormatSearchResults(entityResponse, false, false)
+	if !strings.Contains(markdown, "### Entities") || !strings.Contains(markdown, "scoreless highlight") || strings.Contains(markdown, "scoreless highlight (score:") {
+		t.Fatalf("unexpected markdown:\n%s", markdown)
+	}
+	block := strings.SplitN(strings.SplitN(markdown, "```json\n", 2)[1], "\n```", 2)[0]
+	var rendered []map[string]any
+	if err := json.Unmarshal([]byte(block), &rendered); err != nil {
+		t.Fatalf("decode markdown entity block: %v", err)
+	}
+	if rendered[0]["properties"].(map[string]any)["rating"] != 4.7 {
+		t.Fatalf("markdown entity data lost: %#v", rendered)
+	}
+	if strings.Contains(FormatSearchResults(&client.SearchResponse{Results: []client.SearchResult{{Title: "No entities"}}}, false, false), "### Entities") {
+		t.Fatal("entity heading shown without entities")
+	}
 
 	t.Run("json mode", func(t *testing.T) {
 		out := FormatSearchResults(resp, true, false)

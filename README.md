@@ -113,12 +113,19 @@ exacli search "latest AI developments"
 exacli search "machine learning papers" --type deep --text --highlights
 exacli search "startup funding" --category news --start-date 2024-01-01
 exacli search "AI research" --include-domains "arxiv.org,openai.com"
+exacli search "restaurant ratings" --type lite --dynamic-highlights --toon
 exacli search "trends in quantum computing" --type deep-reasoning --output-schema '{"type":"text","description":"Summarize key trends"}'
 ```
 
-**Options:** `--num-results <n>`, `--type <auto|neural|keyword|hybrid|fast|instant|deep|deep-lite|deep-reasoning>`, `--text`, `--highlights`, `--summary`, `--category <category>`, `--include-domains <list>`, `--exclude-domains <list>`, `--start-date <date>`, `--end-date <date>`, `--autoprompt`, `--output-schema <json|path>`, `--system-prompt <text>`
+**Options:** `--num-results <n>`, `--type <auto|neural|keyword|hybrid|fast|instant|lite|deep|deep-lite|deep-reasoning>`, `--text`, `--highlights`, `--dynamic-highlights`, `--summary`, `--category <category>`, `--include-domains <list>`, `--exclude-domains <list>`, `--start-date <date>`, `--end-date <date>`, `--autoprompt`, `--output-schema <json|path>`, `--system-prompt <text>`
 
 Use `--output-schema` to receive synthesized `output.content`. Use `--system-prompt` to guide synthesis and deep-search planning.
+
+`--type lite` selects the low-cost cached-content mode. It supports text and highlights but rejects `--summary`, `--autoprompt`, `--output-schema`, and `--system-prompt`. Explicitly false summary and autoprompt flags are allowed. The default search mode is unchanged; legacy `fast` and `instant` remain accepted without translation to Lite.
+
+`--dynamic-highlights` requests cross-result Dynamic Highlights and implies `--highlights`, even with `--highlights=false`. The CLI sends the required beta header only for this option. Ordinary highlights remain unchanged.
+
+When Exa returns structured entities, `--json` preserves complete objects in `results[].entities`. `--toon` includes their non-null leaves under `results.<i>.entities.<j>`. Default markdown includes an Entities section with the complete JSON array. Entity types and properties depend on the returned results.
 
 ### `contents <url...>`
 

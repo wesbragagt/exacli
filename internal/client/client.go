@@ -34,20 +34,24 @@ func New(apiKey string) *Client {
 // ---------------------------------------------------------------------------
 
 type searchRequest struct {
-	Query              string   `json:"query"`
-	NumResults         int      `json:"numResults,omitempty"`
-	Type               string   `json:"type,omitempty"`
-	IncludeDomains     []string `json:"includeDomains,omitempty"`
-	ExcludeDomains     []string `json:"excludeDomains,omitempty"`
-	Category           string   `json:"category,omitempty"`
-	StartPublishedDate string   `json:"startPublishedDate,omitempty"`
-	EndPublishedDate   string   `json:"endPublishedDate,omitempty"`
-	UseAutoprompt      bool     `json:"useAutoprompt,omitempty"`
-	Text               bool     `json:"text,omitempty"`
-	Highlights         bool     `json:"highlights,omitempty"`
-	Summary            bool     `json:"summary,omitempty"`
-	OutputSchema       any      `json:"outputSchema,omitempty"`
-	SystemPrompt       string   `json:"systemPrompt,omitempty"`
+	Query              string                 `json:"query"`
+	NumResults         int                    `json:"numResults,omitempty"`
+	Type               string                 `json:"type,omitempty"`
+	IncludeDomains     []string               `json:"includeDomains,omitempty"`
+	ExcludeDomains     []string               `json:"excludeDomains,omitempty"`
+	Category           string                 `json:"category,omitempty"`
+	StartPublishedDate string                 `json:"startPublishedDate,omitempty"`
+	EndPublishedDate   string                 `json:"endPublishedDate,omitempty"`
+	UseAutoprompt      bool                   `json:"useAutoprompt,omitempty"`
+	Contents           *searchContentsRequest `json:"contents,omitempty"`
+	OutputSchema       any                    `json:"outputSchema,omitempty"`
+	SystemPrompt       string                 `json:"systemPrompt,omitempty"`
+}
+
+type searchContentsRequest struct {
+	Text       bool      `json:"text,omitempty"`
+	Highlights any       `json:"highlights,omitempty"`
+	Summary    *struct{} `json:"summary,omitempty"`
 }
 
 type findSimilarRequest struct {
@@ -87,19 +91,20 @@ type codeContextRequest struct {
 
 // SearchOptions configures a Search request.
 type SearchOptions struct {
-	NumResults     int
-	Type           string
-	IncludeDomains []string
-	ExcludeDomains []string
-	Category       string
-	StartDate      string
-	EndDate        string
-	UseAutoprompt  bool
-	Text           bool
-	Highlights     bool
-	Summary        bool
-	OutputSchema   any
-	SystemPrompt   string
+	NumResults        int
+	Type              string
+	IncludeDomains    []string
+	ExcludeDomains    []string
+	Category          string
+	StartDate         string
+	EndDate           string
+	UseAutoprompt     bool
+	Text              bool
+	Highlights        bool
+	DynamicHighlights bool
+	Summary           bool
+	OutputSchema      any
+	SystemPrompt      string
 }
 
 // FindSimilarOptions configures a FindSimilar request.
@@ -156,16 +161,17 @@ type CostDollars struct {
 
 // SearchResult is a single result from a search or content request.
 type SearchResult struct {
-	ID              string    `json:"id"`
-	URL             string    `json:"url"`
-	Title           string    `json:"title"`
-	PublishedDate   string    `json:"publishedDate"`
-	Author          string    `json:"author"`
-	Score           float64   `json:"score"`
-	Text            string    `json:"text"`
-	Highlights      []string  `json:"highlights"`
-	HighlightScores []float64 `json:"highlightScores"`
-	Summary         string    `json:"summary"`
+	ID              string            `json:"id"`
+	URL             string            `json:"url"`
+	Title           string            `json:"title"`
+	PublishedDate   string            `json:"publishedDate"`
+	Author          string            `json:"author"`
+	Score           float64           `json:"score"`
+	Text            string            `json:"text"`
+	Highlights      []string          `json:"highlights"`
+	Entities        []json.RawMessage `json:"entities,omitempty"`
+	HighlightScores []float64         `json:"highlightScores"`
+	Summary         string            `json:"summary"`
 }
 
 // AnswerResponse is returned by Answer.
@@ -200,7 +206,7 @@ type CodeContextResponse struct {
 // ---------------------------------------------------------------------------
 
 // post sends a POST request with a JSON body and decodes the response into out.
-func (c *Client) post(path string, body any, out any) error {
+func (c *Client) post(path string, body any, out any, headers http.Header) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("marshaling request body: %w", err)
@@ -212,6 +218,11 @@ func (c *Client) post(path string, body any, out any) error {
 	}
 	req.Header.Set("x-api-key", c.apiKey)
 	req.Header.Set("Content-Type", "application/json")
+	for key, values := range headers {
+		for _, value := range values {
+			req.Header.Add(key, value)
+		}
+	}
 
 	resp, err := c.http.Do(req)
 	if err != nil {
@@ -262,6 +273,20 @@ func (c *Client) get(path string, params url.Values, out any) error {
 
 // Search performs a semantic or keyword search via the Exa API.
 func (c *Client) Search(query string, opts SearchOptions) (*SearchResponse, error) {
+	var contents *searchContentsRequest
+	if opts.Text || opts.Highlights || opts.DynamicHighlights || opts.Summary {
+		contents = &searchContentsRequest{Text: opts.Text}
+		if opts.DynamicHighlights {
+			contents.Highlights = struct {
+				Dynamic bool `json:"dynamic"`
+			}{Dynamic: true}
+		} else if opts.Highlights {
+			contents.Highlights = true
+		}
+		if opts.Summary {
+			contents.Summary = &struct{}{}
+		}
+	}
 	body := searchRequest{
 		Query:              query,
 		NumResults:         opts.NumResults,
@@ -272,15 +297,17 @@ func (c *Client) Search(query string, opts SearchOptions) (*SearchResponse, erro
 		StartPublishedDate: opts.StartDate,
 		EndPublishedDate:   opts.EndDate,
 		UseAutoprompt:      opts.UseAutoprompt,
-		Text:               opts.Text,
-		Highlights:         opts.Highlights,
-		Summary:            opts.Summary,
+		Contents:           contents,
 		OutputSchema:       opts.OutputSchema,
 		SystemPrompt:       opts.SystemPrompt,
 	}
 
 	var resp SearchResponse
-	if err := c.post("/search", body, &resp); err != nil {
+	headers := http.Header(nil)
+	if opts.DynamicHighlights {
+		headers = http.Header{"Exa-Beta": []string{"dynamic-highlights-2026-08-28"}}
+	}
+	if err := c.post("/search", body, &resp, headers); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -299,7 +326,7 @@ func (c *Client) FindSimilar(u string, opts FindSimilarOptions) (*SearchResponse
 	}
 
 	var resp SearchResponse
-	if err := c.post("/findSimilar", body, &resp); err != nil {
+	if err := c.post("/findSimilar", body, &resp, nil); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -316,7 +343,7 @@ func (c *Client) GetContents(urls []string, opts ContentsOptions) (*SearchRespon
 	}
 
 	var resp SearchResponse
-	if err := c.post("/contents", body, &resp); err != nil {
+	if err := c.post("/contents", body, &resp, nil); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -332,7 +359,7 @@ func (c *Client) Answer(query string, opts AnswerOptions) (*AnswerResponse, erro
 	}
 
 	var resp AnswerResponse
-	if err := c.post("/answer", body, &resp); err != nil {
+	if err := c.post("/answer", body, &resp, nil); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -418,7 +445,7 @@ func (c *Client) CodeContext(query string, opts CodeContextOptions) (*CodeContex
 	}
 
 	var resp CodeContextResponse
-	if err := c.post("/context", body, &resp); err != nil {
+	if err := c.post("/context", body, &resp, nil); err != nil {
 		return nil, err
 	}
 	return &resp, nil
