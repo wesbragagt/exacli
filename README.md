@@ -73,6 +73,31 @@ The default search mode, existing commands, and previously accepted search types
 
 ---
 
+## Why use this CLI instead of Exa's official integrations?
+
+Choose Exacli when you want shell commands, selectable output formats, and local API-key storage. Choose Exa's official MCP integration when you want your assistant to discover and call Exa tools directly.
+
+As checked on October 20, 2026, [Exa's documentation index](https://exa.ai/docs/llms.txt) recommends its Python and JavaScript SDKs, hosted MCP server, and agent skills. It does not list a standalone official Exa CLI. Exacli is independently maintained, not an official Exa product. The comparison below is with [Exa's official MCP and plugin integrations](https://exa.ai/docs/get-started/exa-mcp), including those used inside terminal agents such as Claude Code and Codex.
+
+| Need | Why choose Exacli | When the official integration fits better |
+|------|------------------|-------------------------------------------|
+| Shell scripts and explicit commands | Run `search`, `contents`, `code`, `similar`, and `answer` directly without an MCP client or assistant session | MCP exposes tools for an assistant to choose and call during a conversation |
+| Control over output | Choose readable markdown, flat `--toon` fields, or `--json` for tools such as `jq` | Use MCP when the assistant should consume tool results and write the final answer |
+| Local credential storage | `exacli login` stores an API key in the OS keychain; scripts can use `EXA_API_KEY` instead | Hosted MCP supports keyless rate-limited access, OAuth, and API keys; Exacli requires an API key |
+| Runtime choice | The built Go executable needs no Node.js or Python runtime; Nix setup is also documented here | Hosted MCP needs no local Exa server; the optional local MCP package runs through `npx` |
+| Search-focused API controls | Explicit flags select Lite, Dynamic Highlights, domain/date filters, and deep-search synthesis, while returned entities remain available in all output modes | Official MCP includes advanced search and `agent_run`, with Exa Agent and Connect controls that this CLI does not implement |
+
+For example, run a search in a shell and extract URLs without asking an assistant to interpret the response:
+
+```bash
+exacli search "Go HTTP client timeout patterns" --type lite --highlights --json \
+  | jq -r '.results[].url'
+```
+
+Both routes use Exa's services. This CLI does not provide a separate search index, free API access, or a demonstrated search-quality or latency advantage. Its benefit is the command and output workflow, not a better search backend. Deep Search synthesis here is not the separate Exa Agent run-management API.
+
+Other projects named "Exa CLI" are not automatically official. For example, [jackmazac/exa-cli](https://github.com/jackmazac/exa-cli) documents native binaries, JSON envelopes, and Agent run commands. It also needs no Node.js runtime after installation, so "no Node.js required" is not a unique advantage over that project. Compare its JSON-first Agent workflow with this CLI's markdown/TOON output and keychain workflow rather than assuming one replaces the other.
+
 ## Why Go?
 
 The original required Bun and kept segfaulting inside a sandboxed harness — that was enough. Go gives you a tiny static binary you can cross-compile for any platform with one command (`make compile-all`), no runtime babysitting required. I'm also just biased: Go is my favorite way to write a CLI.
