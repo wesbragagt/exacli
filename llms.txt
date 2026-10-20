@@ -55,6 +55,15 @@ exacli search "Latest SpaceX valuation" --type deep --system-prompt "Summarize t
 
 ## Core Commands
 
+### New capabilities in v3
+
+- Select `--type lite` for low-cost cached-content search; the previous CLI rejected Lite locally.
+- Request cross-result Dynamic Highlights with `--dynamic-highlights`; the previous CLI had no explicit dynamic option or opt-in header.
+- Retrieve search text, highlights, and summaries using the existing flags with corrected nested content requests; the previous CLI sent extraction flags at the wrong level, where the API could ignore them.
+- Read complete structured entities returned by Exa in JSON and markdown, or their non-null leaves in TOON; the previous CLI discarded entities during decoding. Place addresses, hours, and ratings are examples, not guaranteed query results.
+
+The default search mode and existing commands are unchanged. Expanded Exa index coverage is server-side, not a new CLI command or `/v3` endpoint. See the README's "What v3 adds" section for runnable examples and Lite restrictions.
+
 ### Search
 Search the web using semantic search.
 

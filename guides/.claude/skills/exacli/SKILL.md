@@ -63,6 +63,15 @@ exacli code <query> [options]
 |--------|-------------|
 | `--tokens-num <n>` | Token budget: `dynamic`, `1000`, `5000`, `50000` (default: `dynamic`) |
 
+### What v3 enables
+
+- Use `search --type lite --highlights` for cached-content search; the previous CLI rejected Lite.
+- Use `search --dynamic-highlights` for explicit cross-result Dynamic Highlights; the previous CLI lacked this option and its required opt-in header.
+- Use existing `search --text`, `--highlights`, and `--summary` with corrected nested content requests; the previous request shape could cause the API to ignore those options.
+- Read returned `results[].entities` without losing fields. The previous CLI discarded entities. JSON and markdown retain complete objects; TOON retains non-null leaves. Place data can include addresses, hours, and ratings when Exa returns them.
+
+Existing commands and the default search mode are unchanged. Do not invent dedicated places or other data endpoints; Exa's expanded coverage is server-side. Lite restrictions still apply as documented below.
+
 ### search
 
 ```bash

@@ -38,6 +38,39 @@ exacli search "latest AI news"
 
 Get your key at [https://dashboard.exa.ai/api-keys](https://dashboard.exa.ai/api-keys).
 
+## What v3 adds
+
+Compared with the previous CLI, v3 lets you explicitly select Lite search, request cross-result Dynamic Highlights, and read structured entities without losing their properties. It also fixes content retrieval on `search` using the existing flags.
+
+| Capability | Previous CLI | v3 |
+|------------|--------------|----|
+| Select low-cost cached-content search | Rejected `--type lite` before sending a request | Accepts `--type lite` with supported filters, text, and highlights |
+| Request cross-result Dynamic Highlights | Had no explicit option or required beta header | `--dynamic-highlights` requests dynamic highlights and sends the opt-in header |
+| Retrieve search text, highlights, and summaries | Sent extraction options at the wrong request level; the API could ignore them | Sends nested `contents` options so existing `--text`, `--highlights`, and `--summary` flags request the content correctly |
+| Read structured result entities | Discarded `results[].entities` during response decoding | Preserves complete entity objects in JSON, non-null leaves in TOON, and a JSON array in markdown |
+
+Try the new capabilities with these commands. They require a valid API key and available credits; returned content and entities depend on the query and Exa's response.
+
+```bash
+# Select Lite and retrieve relevant snippets
+exacli search "Exa 3.0 release features" --type lite --highlights --num-results 1 --json
+
+# Request cross-result Dynamic Highlights without a separate --highlights flag
+exacli search "Exa 3.0 release features" --type lite --dynamic-highlights --toon
+
+# Retrieve summaries using the corrected search content request
+exacli search "Exa 3.0 release features" --type auto --summary --num-results 1 --json
+
+# Read place entities, such as addresses, hours, and ratings, when returned
+exacli search "ramen restaurants in San Francisco Mission district" --type lite --highlights --json
+```
+
+For the last command, omit `--json` to inspect the markdown Entities section, or replace it with `--toon` for flattened entity fields. V3 preserves unknown entity types and properties rather than limiting results to a fixed place schema.
+
+Lite does not support enabled `--summary` or `--autoprompt`, or nonempty `--output-schema` or `--system-prompt`. Use Auto for summaries and the existing deep modes for synthesis. Dynamic Highlights implies highlight retrieval even with `--highlights=false`.
+
+The default search mode, existing commands, and previously accepted search types are unchanged. Exa's expanded index coverage applies server-side; it is not a new CLI endpoint. V3 still uses `https://api.exa.ai/search` and adds no dedicated places, products, weather, or flights commands.
+
 ---
 
 ## Why Go?
