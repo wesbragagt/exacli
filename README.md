@@ -96,8 +96,6 @@ exacli search "Go HTTP client timeout patterns" --type lite --highlights --json 
 
 Both routes use Exa's services. This CLI does not provide a separate search index, free API access, or a demonstrated search-quality or latency advantage. Its benefit is the command and output workflow, not a better search backend. Deep Search synthesis here is not the separate Exa Agent run-management API.
 
-Other projects named "Exa CLI" are not automatically official. For example, [jackmazac/exa-cli](https://github.com/jackmazac/exa-cli) documents native binaries, JSON envelopes, and Agent run commands. It also needs no Node.js runtime after installation, so "no Node.js required" is not a unique advantage over that project. Compare its JSON-first Agent workflow with this CLI's markdown/TOON output and keychain workflow rather than assuming one replaces the other.
-
 ## Why Go?
 
 The original required Bun and kept segfaulting inside a sandboxed harness — that was enough. Go gives you a tiny static binary you can cross-compile for any platform with one command (`make compile-all`), no runtime babysitting required. I'm also just biased: Go is my favorite way to write a CLI.
